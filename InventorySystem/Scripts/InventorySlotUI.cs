@@ -8,6 +8,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
     public GameObject itemActionPrefab; // Assign this in the inspector
     private static GameObject currentItemActionUI;
     private Canvas parentCanvas;
+    //public Inventory inventory;
 
     private void Awake()
     {

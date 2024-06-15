@@ -9,6 +9,25 @@ public class ItemActionUI : MonoBehaviour
 
     private InventorySlotUI parentSlotUI;
 
+    private Inventory playerInventory;
+
+    private void Start()
+    {
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player != null)
+        {
+            playerInventory = player.GetComponent<Inventory>();
+            if (playerInventory == null)
+            {
+                Debug.LogError("Inventory component not found on player.");
+            }
+        }
+        else
+        {
+            Debug.LogError("Player GameObject with tag 'Player' not found.");
+        }
+    }
+
     public void ConfigureButtons(InventoryItem item, InventorySlotUI slotUI)
     {
         parentSlotUI = slotUI;
@@ -17,38 +36,81 @@ public class ItemActionUI : MonoBehaviour
         equipButton.gameObject.SetActive(item.itemType == ItemType.Equipment);
         dropButton.gameObject.SetActive(true); // Drop button is always enabled
 
-        // Optionally, set up button click listeners here
         useButton.onClick.RemoveAllListeners();
         equipButton.onClick.RemoveAllListeners();
         dropButton.onClick.RemoveAllListeners();
 
-        useButton.onClick.AddListener(() => UseItem(item));
-        equipButton.onClick.AddListener(() => EquipItem(item));
-        dropButton.onClick.AddListener(() => DropItem(item));
+        useButton.onClick.AddListener(() => UseItem(item, slotUI.slot));
+        equipButton.onClick.AddListener(() => EquipItem(item, slotUI.slot));
+        dropButton.onClick.AddListener(() => DropItem(item, slotUI.slot));
     }
 
-    private void UseItem(InventoryItem item)
+    private void UseItem(InventoryItem item, InventorySlot slot)
     {
         Debug.Log($"Using {item.itemName}");
-        // Implement item usage logic here
-
+        ApplyItemEffects(item);
+        if (playerInventory != null)
+        {
+            playerInventory.RemoveItemFromSlot(slot, 1); // Remove the used item from the specific slot
+        }
         CloseActionUI();
     }
 
-    private void EquipItem(InventoryItem item)
+    private void EquipItem(InventoryItem item, InventorySlot slot)
     {
         Debug.Log($"Equipping {item.itemName}");
         // Implement item equipping logic here
-
         CloseActionUI();
     }
 
-    private void DropItem(InventoryItem item)
+    private void DropItem(InventoryItem item, InventorySlot slot)
     {
         Debug.Log($"Dropping {item.itemName}");
         // Implement item dropping logic here
-
+        if (playerInventory != null)
+        {
+            playerInventory.RemoveItemFromSlot(slot, 1); // Remove the dropped item from the specific slot
+        }
         CloseActionUI();
+    }
+
+    private void ApplyItemEffects(InventoryItem item)
+    {
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player != null)
+        {
+            PlayerStatus playerStatus = player.GetComponent<PlayerStatus>();
+            if (playerStatus != null)
+            {
+                foreach (var stat in item.stats)
+                {
+                    switch (stat.statType)
+                    {
+                        case StatType.Health:
+                            playerStatus.Health = Mathf.Min(playerStatus.Health + stat.value, playerStatus.MaxHealth);
+                            break;
+                        case StatType.Mana:
+                            playerStatus.Mana = Mathf.Min(playerStatus.Mana + stat.value, playerStatus.MaxMana);
+                            break;
+                        case StatType.Stamina:
+                            playerStatus.Stamina = Mathf.Min(playerStatus.Stamina + stat.value, playerStatus.MaxStamina);
+                            break;
+                        default:
+                            playerStatus.AddStat(stat.statType, stat.value);
+                            break;
+                    }
+                }
+                Debug.Log("Item effects applied.");
+            }
+            else
+            {
+                Debug.LogError("PlayerStatus component not found on player.");
+            }
+        }
+        else
+        {
+            Debug.LogError("Player GameObject with tag 'Player' not found.");
+        }
     }
 
     public void CloseActionUI()

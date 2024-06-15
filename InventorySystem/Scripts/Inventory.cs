@@ -4,9 +4,9 @@ using UnityEngine.UI;
 
 public class Inventory : MonoBehaviour
 {
-    public int rows = 4;  // Number of rows per page
-    public int columns = 5;  // Fixed number of columns
-    public int totalSlots = 20;  // Total number of slots
+    public int rows = 4;
+    public int columns = 5;
+    public int totalSlots = 20;
     public GameObject slotPrefab;
     public Transform inventoryGrid;
     public Button nextPageButton;
@@ -14,11 +14,6 @@ public class Inventory : MonoBehaviour
     public List<InventorySlot> inventorySlots = new List<InventorySlot>();
     public int currentPage = 0;
     private int pages;
-    //public GameObject pickupTextPrefab;
-
-    //public Vector2 spacing = new Vector2(10, 10);  // Spacing between slots
-
-    private RectOffset padding;
 
     public int Pages
     {
@@ -27,39 +22,18 @@ public class Inventory : MonoBehaviour
 
     void Start()
     {
-        // Initialize padding
-        //padding = new RectOffset(paddingLeft, paddingRight, paddingTop, paddingBottom);
-
         SetupInventoryUI();
-
-        // Assign button click events
         nextPageButton.onClick.AddListener(NextPage);
         previousPageButton.onClick.AddListener(PreviousPage);
     }
 
     public void SetupInventoryUI()
     {
-        // Clear existing slots
         foreach (Transform child in inventoryGrid)
         {
             Destroy(child.gameObject);
         }
         inventorySlots.Clear();
-
-        // Set padding and spacing for the GridLayoutGroup
-        // GridLayoutGroup gridLayout = inventoryGrid.GetComponent<GridLayoutGroup>();
-        // gridLayout.padding = padding;
-        // gridLayout.spacing = spacing;
-        // gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-        // gridLayout.constraintCount = columns;
-
-        // float width = ((RectTransform)inventoryGrid).rect.width;
-        // float height = ((RectTransform)inventoryGrid).rect.height;
-
-        // // Calculate cell size considering spacing and padding
-        // float cellWidth = (width - gridLayout.padding.left - gridLayout.padding.right - (gridLayout.spacing.x * (columns - 1))) / columns;
-        // float cellHeight = (height - gridLayout.padding.top - gridLayout.padding.bottom - (gridLayout.spacing.y * (rows - 1))) / rows;
-        //gridLayout.cellSize = new Vector2(cellWidth, cellHeight);
 
         int slotsPerPage = rows * columns;
         pages = Mathf.CeilToInt((float)totalSlots / slotsPerPage);
@@ -70,10 +44,9 @@ public class Inventory : MonoBehaviour
             InventorySlotUI slotUI = slotObject.GetComponent<InventorySlotUI>();
             if (slotUI != null)
             {
-                slotUI.slot.SetTransformProperties(); // Ensure transform properties are set
+                slotUI.slot.SetTransformProperties();
                 inventorySlots.Add(slotUI.slot);
 
-                // Set the InventorySlot reference in the DragHandler
                 InventoryDragHandler dragHandler = slotObject.transform.Find("DraggableItem").GetComponent<InventoryDragHandler>();
                 if (dragHandler != null)
                 {
@@ -89,12 +62,10 @@ public class Inventory : MonoBehaviour
     {
         while (quantity > 0)
         {
-            // Find an existing slot that has the item and can take more of it
             InventorySlot existingSlot = FindItemSlot(item);
 
             if (existingSlot != null)
             {
-                // Calculate the amount to add to the existing stack
                 int amountToAdd = Mathf.Min(quantity, item.maxStackSize - existingSlot.quantity);
                 existingSlot.quantity += amountToAdd;
                 existingSlot.stackText.text = existingSlot.quantity.ToString();
@@ -102,7 +73,6 @@ public class Inventory : MonoBehaviour
             }
             else
             {
-                // Find an empty slot
                 InventorySlot newSlot = inventorySlots.Find(slot => slot.item == null);
                 if (newSlot != null)
                 {
@@ -138,7 +108,35 @@ public class Inventory : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("Item not found in inventory!");
+            InventorySlot slot = inventorySlots.Find(s => s.item == item);
+            if (slot != null)
+            {
+                slot.SetItem(null, 0);
+            }
+            else
+            {
+                Debug.LogWarning("Item not found in inventory!");
+            }
+        }
+    }
+
+    public void RemoveItemFromSlot(InventorySlot slot, int quantity)
+    {
+        if (slot != null)
+        {
+            slot.quantity -= quantity;
+            if (slot.quantity <= 0)
+            {
+                slot.SetItem(null, 0);
+            }
+            else
+            {
+                slot.stackText.text = slot.quantity.ToString();
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Slot not found in inventory!");
         }
     }
 
@@ -189,7 +187,6 @@ public class Inventory : MonoBehaviour
             }
         }
 
-        // Update button states
         nextPageButton.interactable = currentPage < Pages - 1;
         previousPageButton.interactable = currentPage > 0;
     }

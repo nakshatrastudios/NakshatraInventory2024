@@ -6,7 +6,8 @@ public class SetupItemEditor : EditorWindow
     private InventoryItem selectedItem;
     private GameObject itemPrefab;
     private GameObject pickupTextPrefab;
-    private Vector3 colliderSize = new Vector3(5, 1, 5);
+    private float colliderRadius = 1f;
+    private float colliderHeight = -0.5f;
 
     [MenuItem("Inventory System/Setup Item")]
     public static void ShowWindow()
@@ -21,8 +22,9 @@ public class SetupItemEditor : EditorWindow
         itemPrefab = (GameObject)EditorGUILayout.ObjectField("Item Prefab", itemPrefab, typeof(GameObject), false);
         pickupTextPrefab = (GameObject)EditorGUILayout.ObjectField("Pickup Text Prefab", pickupTextPrefab, typeof(GameObject), false);
 
-        GUILayout.Label("Trigger Collider Size", EditorStyles.boldLabel);
-        colliderSize = EditorGUILayout.Vector3Field("Size", colliderSize);
+        GUILayout.Label("Trigger Collider Settings", EditorStyles.boldLabel);
+        colliderRadius = EditorGUILayout.FloatField("Radius", colliderRadius);
+        colliderHeight = EditorGUILayout.FloatField("Height Offset", colliderHeight);
 
         if (GUILayout.Button("Setup Item"))
         {
@@ -60,24 +62,17 @@ public class SetupItemEditor : EditorWindow
             itemPickup = newItemObject.AddComponent<ItemPickup>();
         }
         itemPickup.item = selectedItem;
+        itemPickup.pickupTextPrefab = pickupTextPrefab;
 
         // Create and configure the trigger collider
-        BoxCollider triggerCollider = newItemObject.GetComponent<BoxCollider>();
+        SphereCollider triggerCollider = newItemObject.GetComponent<SphereCollider>();
         if (triggerCollider == null)
         {
-            triggerCollider = newItemObject.AddComponent<BoxCollider>();
+            triggerCollider = newItemObject.AddComponent<SphereCollider>();
         }
         triggerCollider.isTrigger = true;
-        triggerCollider.size = colliderSize;
-
-        // Add the PickupText prefab to the item
-        if (pickupTextPrefab != null)
-        {
-            GameObject pickupTextObject = Instantiate(pickupTextPrefab, newItemObject.transform);
-            pickupTextObject.name = "PickupText";
-            pickupTextObject.SetActive(false); // Hide initially
-            itemPickup.pickupText = pickupTextObject;
-        }
+        triggerCollider.radius = colliderRadius;
+        triggerCollider.center = new Vector3(0, colliderHeight, 0);
 
         // Save the new item prefab in the Resources folder
         string prefabPath = resourcesPath + "/" + selectedItem.itemName + ".prefab";

@@ -165,7 +165,7 @@ public class InventoryDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandl
     {
         if (dragItem != null)
         {
-            dragItem.transform.position = Input.mousePosition;
+            dragRectTransform.position = Input.mousePosition;
         }
     }
 }
