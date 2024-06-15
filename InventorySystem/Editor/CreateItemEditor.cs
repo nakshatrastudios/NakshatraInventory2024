@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class CreateItemEditor : EditorWindow
 {
@@ -14,6 +15,7 @@ public class CreateItemEditor : EditorWindow
     private WeaponType weaponType;
     private bool isMainHand;
     private bool isOffHand;
+    private List<ItemStat> itemStats = new List<ItemStat>();
 
     [MenuItem("Inventory System/Create Item")]
     public static void ShowWindow()
@@ -52,6 +54,24 @@ public class CreateItemEditor : EditorWindow
             }
         }
 
+        GUILayout.Label("Item Stats", EditorStyles.boldLabel);
+        for (int i = 0; i < itemStats.Count; i++)
+        {
+            EditorGUILayout.BeginHorizontal();
+            itemStats[i].statType = (StatType)EditorGUILayout.EnumPopup("Stat Type", itemStats[i].statType);
+            itemStats[i].value = EditorGUILayout.IntField("Value", itemStats[i].value);
+            if (GUILayout.Button("Remove"))
+            {
+                itemStats.RemoveAt(i);
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+
+        if (GUILayout.Button("Add Stat"))
+        {
+            itemStats.Add(new ItemStat());
+        }
+
         if (GUILayout.Button("Create Item"))
         {
             CreateItem();
@@ -81,11 +101,12 @@ public class CreateItemEditor : EditorWindow
         newItem.isStackable = isStackable;
         newItem.maxStackSize = maxStackSize;
         newItem.itemType = itemType;
-        newItem.amount = amount;
+        //newItem.amount = amount;
         newItem.equipmentCategory = equipmentCategory;
         newItem.weaponType = weaponType;
         newItem.isMainHand = isMainHand;
         newItem.isOffHand = isOffHand;
+        newItem.stats = new List<ItemStat>(itemStats);
 
         // Save the new InventoryItem ScriptableObject to the Resources folder
         string itemPath = resourcesPath + "/" + itemName + ".asset";

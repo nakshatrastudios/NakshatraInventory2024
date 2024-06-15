@@ -1,19 +1,11 @@
 using UnityEngine;
-using UnityEngine.UI;
 
 public class ItemPickup : MonoBehaviour
 {
     public InventoryItem item;  // Assign this in the Inspector
-    public GameObject pickupText;  // Assign the Text GameObject in the Inspector
+    public GameObject pickupTextPrefab;  // Assign the PickupText prefab in the Inspector
+    private GameObject pickupTextInstance;
     private bool playerInRange;
-
-    private void Start()
-    {
-        if (pickupText != null)
-        {
-            pickupText.SetActive(false);  // Hide the text initially
-        }
-    }
 
     private void OnTriggerEnter(Collider other)
     {
@@ -30,9 +22,10 @@ public class ItemPickup : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             playerInRange = true;
-            if (pickupText != null)
+            if (pickupTextPrefab != null && pickupTextInstance == null)
             {
-                pickupText.SetActive(true);  // Show the pickup text
+                pickupTextInstance = Instantiate(pickupTextPrefab, transform.position, Quaternion.identity);
+                pickupTextInstance.SetActive(true);
             }
         }
     }
@@ -52,9 +45,10 @@ public class ItemPickup : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             playerInRange = false;
-            if (pickupText != null)
+            if (pickupTextInstance != null)
             {
-                pickupText.SetActive(false);  // Hide the pickup text
+                Destroy(pickupTextInstance);
+                pickupTextInstance = null;
             }
         }
     }
@@ -69,12 +63,11 @@ public class ItemPickup : MonoBehaviour
             {
                 // Add the item to the player's inventory
                 playerInventory.AddItem(item, 1);
-                // Hide the pickup text
-                if (pickupText != null)
+                // Destroy the pickup text and the item pickup GameObject
+                if (pickupTextInstance != null)
                 {
-                    pickupText.SetActive(false);
+                    Destroy(pickupTextInstance);
                 }
-                // Destroy the item pickup GameObject
                 Destroy(gameObject);
             }
             else

@@ -11,7 +11,7 @@ public class InventoryItem : ScriptableObject
     public int maxStackSize = 1;
 
     public ItemType itemType;
-    public int amount = 0;  // For consumables like health potions
+
 
     // Equipment specific
     public EquipmentCategory equipmentCategory;
@@ -68,8 +68,11 @@ public enum StatType
     Block,
     Intelligence,
     Health,
+    MaxHealth,
     Mana,
+    MaxMana,
     Stamina,
+    MaxStamina,
     Speed,
     Agility,
     Strength,

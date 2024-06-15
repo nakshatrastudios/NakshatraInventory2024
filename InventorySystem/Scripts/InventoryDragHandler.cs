@@ -13,6 +13,7 @@ public class InventoryDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandl
     private bool isChangingPage = false;
 
     private GameObject dragItem;
+    private RectTransform dragRectTransform;
 
     private void Awake()
     {
@@ -41,7 +42,7 @@ public class InventoryDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandl
             CanvasGroup tempCanvasGroup = dragItem.AddComponent<CanvasGroup>();
             tempCanvasGroup.blocksRaycasts = false;
 
-            RectTransform dragRectTransform = dragItem.GetComponent<RectTransform>();
+            dragRectTransform = dragItem.GetComponent<RectTransform>();
             dragRectTransform.sizeDelta = rectTransform.sizeDelta;
             dragRectTransform.position = Input.mousePosition;
         }
@@ -51,7 +52,6 @@ public class InventoryDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandl
     {
         if (dragItem != null)
         {
-            RectTransform dragRectTransform = dragItem.GetComponent<RectTransform>();
             dragRectTransform.position = Input.mousePosition;
 
             if (inventory != null && inventory.nextPageButton != null && inventory.previousPageButton != null)
@@ -150,7 +150,23 @@ public class InventoryDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandl
 
                 draggedHandler.canvasGroup.alpha = 1f;
                 canvasGroup.alpha = 1f;
+
+                // Ensure the draggedHandler's dragItem is destroyed when the drop is completed
+                if (draggedHandler.dragItem != null)
+                {
+                    Destroy(draggedHandler.dragItem);
+                    draggedHandler.dragItem = null;
+                }
             }
         }
     }
+
+    private void Update()
+    {
+        if (dragItem != null)
+        {
+            dragRectTransform.position = Input.mousePosition;
+        }
+    }
 }
+
