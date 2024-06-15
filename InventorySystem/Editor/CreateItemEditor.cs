@@ -17,10 +17,36 @@ public class CreateItemEditor : EditorWindow
     private bool isOffHand;
     private List<ItemStat> itemStats = new List<ItemStat>();
 
+    // Currency related
+    private List<CurrencyManager.Currency> currencies;
+    private Dictionary<string, int> currencyAmounts = new Dictionary<string, int>();
+
     [MenuItem("Inventory System/Create Item")]
     public static void ShowWindow()
     {
         GetWindow<CreateItemEditor>("Create Item");
+    }
+
+    private void OnEnable()
+    {
+        LoadCurrencies();
+    }
+
+    private void LoadCurrencies()
+    {
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player != null)
+        {
+            CurrencyManager currencyManager = player.GetComponent<CurrencyManager>();
+            if (currencyManager != null)
+            {
+                currencies = currencyManager.currencies;
+                foreach (var currency in currencies)
+                {
+                    currencyAmounts[currency.name] = 0;
+                }
+            }
+        }
     }
 
     private void OnGUI()
@@ -28,14 +54,18 @@ public class CreateItemEditor : EditorWindow
         GUILayout.Label("Item Settings", EditorStyles.boldLabel);
         itemName = EditorGUILayout.TextField("Item Name", itemName);
         itemDescription = EditorGUILayout.TextField("Item Description", itemDescription);
-        itemIcon = (Sprite)EditorGUILayout.ObjectField("Item Icon", itemIcon, typeof(Sprite), false);
-        isStackable = EditorGUILayout.Toggle("Is Stackable", isStackable);
-        if (isStackable)
-        {
-            maxStackSize = EditorGUILayout.IntField("Max Stack Size", maxStackSize);
-        }
 
         itemType = (ItemType)EditorGUILayout.EnumPopup("Item Type", itemType);
+        if (itemType != ItemType.Currency)
+        {
+            itemIcon = (Sprite)EditorGUILayout.ObjectField("Item Icon", itemIcon, typeof(Sprite), false);
+            isStackable = EditorGUILayout.Toggle("Is Stackable", isStackable);
+            if (isStackable)
+            {
+                maxStackSize = EditorGUILayout.IntField("Max Stack Size", maxStackSize);
+            }
+        }
+
         if (itemType == ItemType.Consumable)
         {
             amount = EditorGUILayout.IntField("Amount", amount);
@@ -53,23 +83,34 @@ public class CreateItemEditor : EditorWindow
                 }
             }
         }
-
-        GUILayout.Label("Item Stats", EditorStyles.boldLabel);
-        for (int i = 0; i < itemStats.Count; i++)
+        else if (itemType == ItemType.Currency)
         {
-            EditorGUILayout.BeginHorizontal();
-            itemStats[i].statType = (StatType)EditorGUILayout.EnumPopup("Stat Type", itemStats[i].statType);
-            itemStats[i].value = EditorGUILayout.IntField("Value", itemStats[i].value);
-            if (GUILayout.Button("Remove"))
+            GUILayout.Label("Currency Amounts", EditorStyles.boldLabel);
+            foreach (var currency in currencies)
             {
-                itemStats.RemoveAt(i);
+                currencyAmounts[currency.name] = EditorGUILayout.IntField(currency.name, currencyAmounts[currency.name]);
             }
-            EditorGUILayout.EndHorizontal();
         }
 
-        if (GUILayout.Button("Add Stat"))
+        if (itemType != ItemType.Currency)
         {
-            itemStats.Add(new ItemStat());
+            GUILayout.Label("Item Stats", EditorStyles.boldLabel);
+            for (int i = 0; i < itemStats.Count; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                itemStats[i].statType = (StatType)EditorGUILayout.EnumPopup("Stat Type", itemStats[i].statType);
+                itemStats[i].value = EditorGUILayout.IntField("Value", itemStats[i].value);
+                if (GUILayout.Button("Remove"))
+                {
+                    itemStats.RemoveAt(i);
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+
+            if (GUILayout.Button("Add Stat"))
+            {
+                itemStats.Add(new ItemStat());
+            }
         }
 
         if (GUILayout.Button("Create Item"))
@@ -101,12 +142,18 @@ public class CreateItemEditor : EditorWindow
         newItem.isStackable = isStackable;
         newItem.maxStackSize = maxStackSize;
         newItem.itemType = itemType;
-        //newItem.amount = amount;
+        newItem.amount = amount;
         newItem.equipmentCategory = equipmentCategory;
         newItem.weaponType = weaponType;
         newItem.isMainHand = isMainHand;
         newItem.isOffHand = isOffHand;
         newItem.stats = new List<ItemStat>(itemStats);
+
+        // Set currency amounts if item type is Currency
+        if (itemType == ItemType.Currency)
+        {
+            newItem.currencyAmounts = new Dictionary<string, int>(currencyAmounts);
+        }
 
         // Save the new InventoryItem ScriptableObject to the Resources folder
         string itemPath = resourcesPath + "/" + itemName + ".asset";

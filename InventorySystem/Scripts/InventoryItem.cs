@@ -12,9 +12,10 @@ public class InventoryItem : ScriptableObject
 
     public ItemType itemType;
 
-
     // Equipment specific
     public EquipmentCategory equipmentCategory;
+
+    public int amount;
 
     // Weapon specific
     public WeaponType weaponType;
@@ -23,12 +24,16 @@ public class InventoryItem : ScriptableObject
 
     // Dynamic stats
     public List<ItemStat> stats = new List<ItemStat>();
+
+    // Currency specific
+    public Dictionary<string, int> currencyAmounts = new Dictionary<string, int>();
 }
 
 public enum ItemType
 {
     Consumable,
     Equipment,
+    Currency, // Added Currency type
     Other
 }
 

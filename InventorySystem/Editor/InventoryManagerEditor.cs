@@ -4,8 +4,12 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 
-public class InventorySystemEditor : EditorWindow
+public class InventoryManagerEditor : EditorWindow
 {
+    private enum Tab { CreateInventory, CreateItem, SetupItem }
+    private Tab currentTab = Tab.CreateInventory;
+
+    // Variables for Create Inventory
     private int numSlots;
     private int slotsPerRow;
     private int rowsPerPage;
@@ -27,10 +31,32 @@ public class InventorySystemEditor : EditorWindow
     private List<Currency> currencies = new List<Currency>();
     private Vector2 scrollPosition;
 
-    [MenuItem("Inventory System/Create Inventory")]
+    // Variables for Create Item
+    private string itemName = "New Item";
+    private string itemDescription = "Item Description";
+    private Sprite itemIcon;
+    private bool isStackable;
+    private int maxStackSize = 1;
+    private ItemType itemType;
+    private int amount = 0;  // For consumables like health potions
+    private EquipmentCategory equipmentCategory;
+    private WeaponType weaponType;
+    private bool isMainHand;
+    private bool isOffHand;
+    private List<ItemStat> itemStats = new List<ItemStat>();
+    private Dictionary<string, int> currencyAmounts = new Dictionary<string, int>();
+
+    // Variables for Setup Item
+    private InventoryItem item;
+    private GameObject itemPrefab;
+    private GameObject pickupTextPrefab;
+    private float sphereRadius = 1.0f;
+    private float sphereHeight = -0.5f;
+
+    [MenuItem("Inventory System/Inventory Manager")]
     public static void ShowWindow()
     {
-        GetWindow<InventorySystemEditor>("Create Inventory");
+        GetWindow<InventoryManagerEditor>("Inventory Manager");
     }
 
     private void OnEnable()
@@ -47,12 +73,76 @@ public class InventorySystemEditor : EditorWindow
             currencies.Add(new Currency("Silver", null, 100));
             currencies.Add(new Currency("Gold", null, 10000));
         }
+        LoadCurrencies();
+    }
+
+    private void LoadCurrencies()
+    {
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player != null)
+        {
+            CurrencyManager currencyManager = player.GetComponent<CurrencyManager>();
+            if (currencyManager != null)
+            {
+                currencies.Clear();
+                currencyAmounts.Clear();
+                foreach (var currency in currencyManager.currencies)
+                {
+                    currencies.Add(new Currency(currency.name, currency.icon, currency.conversionRate));
+                    currencyAmounts[currency.name] = 0;
+                }
+            }
+        }
     }
 
     private void OnGUI()
     {
-        scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, GUILayout.Width(position.width), GUILayout.Height(position.height));
+        EditorGUILayout.BeginHorizontal();
+        DrawTabs();
+        DrawContent();
+        EditorGUILayout.EndHorizontal();
+    }
 
+    private void DrawTabs()
+    {
+        EditorGUILayout.BeginVertical(GUILayout.Width(150));
+        if (GUILayout.Button("Create Inventory"))
+        {
+            currentTab = Tab.CreateInventory;
+        }
+        if (GUILayout.Button("Create Item"))
+        {
+            currentTab = Tab.CreateItem;
+        }
+        if (GUILayout.Button("Setup Item"))
+        {
+            currentTab = Tab.SetupItem;
+        }
+        EditorGUILayout.EndVertical();
+    }
+
+    private void DrawContent()
+    {
+        EditorGUILayout.BeginVertical();
+        scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, GUILayout.Width(position.width - 150), GUILayout.Height(position.height));
+        switch (currentTab)
+        {
+            case Tab.CreateInventory:
+                DrawCreateInventory();
+                break;
+            case Tab.CreateItem:
+                DrawCreateItem();
+                break;
+            case Tab.SetupItem:
+                DrawSetupItem();
+                break;
+        }
+        EditorGUILayout.EndScrollView();
+        EditorGUILayout.EndVertical();
+    }
+
+    private void DrawCreateInventory()
+    {
         GUILayout.Label("Inventory Settings", EditorStyles.boldLabel);
         numSlots = EditorGUILayout.IntField("Number of Slots", numSlots);
         slotsPerRow = EditorGUILayout.IntField("Slots Per Row", slotsPerRow);
@@ -82,7 +172,9 @@ public class InventorySystemEditor : EditorWindow
 
         if (GUILayout.Button("Add Currency"))
         {
-            currencies.Add(new Currency("New Currency", null, 1));
+            var newCurrency = new Currency("New Currency", null, 1);
+            currencies.Add(newCurrency);
+            currencyAmounts[newCurrency.name] = 0;
         }
 
         for (int i = 0; i < currencies.Count; i++)
@@ -93,7 +185,9 @@ public class InventorySystemEditor : EditorWindow
             currencies[i].conversionRate = EditorGUILayout.IntField("Conversion Rate", currencies[i].conversionRate);
             if (GUILayout.Button("Remove"))
             {
+                currencyAmounts.Remove(currencies[i].name);
                 currencies.RemoveAt(i);
+                i--; // Adjust index after removal
             }
             GUILayout.EndHorizontal();
         }
@@ -102,8 +196,6 @@ public class InventorySystemEditor : EditorWindow
         {
             CreateInventory();
         }
-
-        EditorGUILayout.EndScrollView();
     }
 
     private void CreateInventory()
@@ -326,6 +418,207 @@ public class InventorySystemEditor : EditorWindow
         }
 
         Debug.Log("Inventory, HUD, and Currency system created successfully.");
+    }
+
+    private void DrawCreateItem()
+    {
+        GUILayout.Label("Item Settings", EditorStyles.boldLabel);
+        itemName = EditorGUILayout.TextField("Item Name", itemName);
+        itemDescription = EditorGUILayout.TextField("Item Description", itemDescription);
+
+        itemType = (ItemType)EditorGUILayout.EnumPopup("Item Type", itemType);
+        if (itemType != ItemType.Currency)
+        {
+            itemIcon = (Sprite)EditorGUILayout.ObjectField("Item Icon", itemIcon, typeof(Sprite), false);
+            isStackable = EditorGUILayout.Toggle("Is Stackable", isStackable);
+            if (isStackable)
+            {
+                maxStackSize = EditorGUILayout.IntField("Max Stack Size", maxStackSize);
+            }
+        }
+
+        if (itemType == ItemType.Consumable)
+        {
+            amount = EditorGUILayout.IntField("Amount", amount);
+        }
+        else if (itemType == ItemType.Equipment)
+        {
+            equipmentCategory = (EquipmentCategory)EditorGUILayout.EnumPopup("Equipment Category", equipmentCategory);
+            if (equipmentCategory == EquipmentCategory.Weapon)
+            {
+                weaponType = (WeaponType)EditorGUILayout.EnumPopup("Weapon Type", weaponType);
+                if (weaponType == WeaponType.OneHand)
+                {
+                    isMainHand = EditorGUILayout.Toggle("Main Hand", isMainHand);
+                    isOffHand = EditorGUILayout.Toggle("Off Hand", isOffHand);
+                }
+            }
+        }
+        else if (itemType == ItemType.Currency)
+        {
+            GUILayout.Label("Currency Amounts", EditorStyles.boldLabel);
+            List<string> keys = new List<string>(currencyAmounts.Keys);
+            foreach (var key in keys)
+            {
+                if (!currencyAmounts.ContainsKey(key))
+                {
+                    currencyAmounts[key] = 0;
+                }
+                currencyAmounts[key] = EditorGUILayout.IntField(key, currencyAmounts[key]);
+            }
+        }
+
+        if (itemType != ItemType.Currency)
+        {
+            GUILayout.Label("Item Stats", EditorStyles.boldLabel);
+            for (int i = 0; i < itemStats.Count; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                itemStats[i].statType = (StatType)EditorGUILayout.EnumPopup("Stat Type", itemStats[i].statType);
+                itemStats[i].value = EditorGUILayout.IntField("Value", itemStats[i].value);
+                if (GUILayout.Button("Remove"))
+                {
+                    itemStats.RemoveAt(i);
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+
+            if (GUILayout.Button("Add Stat"))
+            {
+                itemStats.Add(new ItemStat());
+            }
+        }
+
+        if (GUILayout.Button("Create Item"))
+        {
+            CreateItem();
+        }
+    }
+
+    private void CreateItem()
+    {
+        if (string.IsNullOrEmpty(itemName))
+        {
+            Debug.LogError("Item name is required.");
+            return;
+        }
+
+        // Ensure Resources folder exists
+        string resourcesPath = "Assets/Resources";
+        if (!AssetDatabase.IsValidFolder(resourcesPath))
+        {
+            AssetDatabase.CreateFolder("Assets", "Resources");
+        }
+
+        // Create a new InventoryItem ScriptableObject
+        InventoryItem newItem = ScriptableObject.CreateInstance<InventoryItem>();
+        newItem.itemName = itemName;
+        newItem.itemDescription = itemDescription;
+        newItem.itemIcon = itemIcon;
+        newItem.isStackable = isStackable;
+        newItem.maxStackSize = maxStackSize;
+        newItem.itemType = itemType;
+        newItem.amount = amount;
+        newItem.equipmentCategory = equipmentCategory;
+        newItem.weaponType = weaponType;
+        newItem.isMainHand = isMainHand;
+        newItem.isOffHand = isOffHand;
+        newItem.stats = new List<ItemStat>(itemStats);
+
+        // Set currency amounts if item type is Currency
+        if (itemType == ItemType.Currency)
+        {
+            newItem.currencyAmounts = new Dictionary<string, int>(currencyAmounts);
+        }
+
+        // Save the new InventoryItem ScriptableObject to the Resources folder
+        string itemPath = resourcesPath + "/" + itemName + ".asset";
+        AssetDatabase.CreateAsset(newItem, itemPath);
+        AssetDatabase.SaveAssets();
+
+        Debug.Log("Item created successfully.");
+    }
+
+    private void DrawSetupItem()
+    {
+        GUILayout.Label("Item Setup", EditorStyles.boldLabel);
+        item = (InventoryItem)EditorGUILayout.ObjectField("Item", item, typeof(InventoryItem), false);
+        itemPrefab = (GameObject)EditorGUILayout.ObjectField("Item Prefab", itemPrefab, typeof(GameObject), false);
+        pickupTextPrefab = (GameObject)EditorGUILayout.ObjectField("Pickup Text Prefab", pickupTextPrefab, typeof(GameObject), false);
+
+        GUILayout.Label("Collider Settings", EditorStyles.boldLabel);
+        sphereRadius = EditorGUILayout.FloatField("Sphere Radius", sphereRadius);
+        sphereHeight = EditorGUILayout.FloatField("Sphere Height", sphereHeight);
+
+        if (item != null && item.itemType == ItemType.Currency)
+        {
+            GUILayout.Label("Currency Amounts", EditorStyles.boldLabel);
+            List<string> keys = new List<string>(currencyAmounts.Keys);
+            foreach (var key in keys)
+            {
+                if (!currencyAmounts.ContainsKey(key))
+                {
+                    currencyAmounts[key] = 0;
+                }
+                currencyAmounts[key] = EditorGUILayout.IntField(key, currencyAmounts[key]);
+            }
+        }
+
+        if (GUILayout.Button("Setup Item"))
+        {
+            SetupItem();
+        }
+    }
+
+    private void SetupItem()
+    {
+        if (item == null || itemPrefab == null || pickupTextPrefab == null)
+        {
+            Debug.LogError("Please assign all required fields.");
+            return;
+        }
+
+        // Ensure Resources folder exists
+        string resourcesPath = "Assets/Resources";
+        if (!AssetDatabase.IsValidFolder(resourcesPath))
+        {
+            AssetDatabase.CreateFolder("Assets", "Resources");
+        }
+
+        string itemPath = resourcesPath + "/" + item.itemName + ".prefab";
+        GameObject itemInstance = Instantiate(itemPrefab);
+        itemInstance.name = item.itemName;
+
+        SphereCollider collider = itemInstance.AddComponent<SphereCollider>();
+        collider.radius = sphereRadius;
+        collider.center = new Vector3(0, sphereHeight, 0);
+        collider.isTrigger = true;
+
+        if (item.itemType == ItemType.Currency)
+        {
+            CurrencyPickup currencyPickup = itemInstance.AddComponent<CurrencyPickup>();
+            currencyPickup.pickupTextPrefab = pickupTextPrefab;
+            foreach (var currency in currencyAmounts)
+            {
+                currencyPickup.currencyAmounts.Add(new CurrencyPickup.CurrencyAmount
+                {
+                    name = currency.Key,
+                    amount = currency.Value
+                });
+            }
+        }
+        else
+        {
+            ItemPickup itemPickup = itemInstance.AddComponent<ItemPickup>();
+            itemPickup.item = item;
+            itemPickup.pickupTextPrefab = pickupTextPrefab;
+        }
+
+        // Save the new prefab to the Resources folder
+        PrefabUtility.SaveAsPrefabAsset(itemInstance, itemPath);
+        DestroyImmediate(itemInstance);
+
+        Debug.Log("Item setup successfully.");
     }
 
     [System.Serializable]
