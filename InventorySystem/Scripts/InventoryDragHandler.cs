@@ -155,11 +155,11 @@ public class InventoryDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandl
 
                         if (equipment != null && equipment.equipmentSlots.TryGetValue(draggedSlot.item.equipmentCategory, out InventorySlot correctSlot))
                         {
-                            if (correctSlot == targetSlot)
+                            if (correctSlot.slotObject == targetSlot.slotObject)
                             {
+                                Debug.Log($"Equipping item {draggedSlot.item.itemName} to {targetSlot.slotObject.name}");
                                 equipment.EquipItem(draggedSlot.item);
                                 draggedSlot.SetItem(null, 0);
-                                Debug.Log($"Equipped item {draggedSlot.item?.itemName} to {targetSlot.slotObject.name}");
                             }
                             else
                             {

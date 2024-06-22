@@ -10,6 +10,8 @@ public class InventorySlot
     public Text stackText;
     public Image itemIcon;
 
+    private CanvasGroup canvasGroup;
+
     public void SetItem(InventoryItem newItem, int newQuantity)
     {
         item = newItem;
@@ -36,6 +38,18 @@ public class InventorySlot
         }
 
         SetTransformProperties();
+
+        // Reset the CanvasGroup properties when the item is set or removed
+        if (canvasGroup == null)
+        {
+            canvasGroup = slotObject.GetComponentInChildren<CanvasGroup>();
+        }
+
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = 1;
+            canvasGroup.blocksRaycasts = true;
+        }
     }
 
     public void SetTransformProperties()

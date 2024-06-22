@@ -42,7 +42,7 @@ public class ItemActionUI : MonoBehaviour
         useButton.gameObject.SetActive(item.itemType == ItemType.Consumable);
         equipButton.gameObject.SetActive(item.itemType == ItemType.Equipment && !slotUI.isEquipmentSlot);
         unequipButton.gameObject.SetActive(slotUI.isEquipmentSlot);
-        dropButton.gameObject.SetActive(true); // Drop button is always enabled
+        dropButton.gameObject.SetActive(!slotUI.isEquipmentSlot); // Drop button is always enabled
         splitButton.gameObject.SetActive(false);
 
         useButton.onClick.RemoveAllListeners();

@@ -12,7 +12,7 @@ public class Equipment : MonoBehaviour
 
     public Dictionary<EquipmentCategory, InventorySlot> equipmentSlots;
 
-    private Inventory inventory; // Add this to reference the Inventory component
+    private Inventory inventory;
 
     private void Start()
     {
@@ -40,7 +40,6 @@ public class Equipment : MonoBehaviour
             }
         }
 
-        // Find and reference the Inventory component
         inventory = FindObjectOfType<Inventory>();
         if (inventory == null)
         {
@@ -125,10 +124,18 @@ public class Equipment : MonoBehaviour
             }
 
             Debug.Log($"Item unequipped: {item.itemName} from slot: {slot.slotObject.name}");
+
+            // Reset the CanvasGroup properties when unequipping the item
+            CanvasGroup canvasGroup = slot.slotObject.GetComponentInChildren<CanvasGroup>();
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 1;
+                canvasGroup.blocksRaycasts = true;
+            }
         }
         else
         {
-            Debug.LogError($"No slot available or item mismatch for equipment category: {item.equipmentCategory}");
+            Debug.LogError($"Item {item.itemName} is not equipped in the expected slot or no slot found.");
         }
     }
 }
