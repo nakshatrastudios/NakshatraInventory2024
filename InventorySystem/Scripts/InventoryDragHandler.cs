@@ -10,6 +10,7 @@ public class InventoryDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandl
     private CanvasGroup canvasGroup;
     private Vector2 originalPosition;
     private Inventory inventory;
+    private Equipment equipment;
     private bool isChangingPage = false;
 
     private GameObject dragItem;
@@ -21,6 +22,7 @@ public class InventoryDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandl
         rectTransform = GetComponent<RectTransform>();
         canvasGroup = GetComponent<CanvasGroup>();
         inventory = FindObjectOfType<Inventory>();
+        equipment = FindObjectOfType<Equipment>();
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -133,29 +135,73 @@ public class InventoryDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandl
                 InventorySlot draggedSlot = draggedHandler.slot;
                 InventorySlot targetSlot = slot;
 
-                InventoryItem tempItem = draggedSlot.item;
-                int tempQuantity = draggedSlot.quantity;
+                Debug.Log($"Dragging item: {draggedSlot.item?.itemName} to target slot: {targetSlot.slotObject.name}");
 
-                draggedSlot.SetItem(targetSlot.item, targetSlot.quantity);
-                targetSlot.SetItem(tempItem, tempQuantity);
-
-                draggedHandler.rectTransform.anchoredPosition = Vector2.zero;
-                rectTransform.anchoredPosition = Vector2.zero;
-
-                draggedSlot.SetTransformProperties();
-                targetSlot.SetTransformProperties();
-
-                draggedHandler.canvasGroup.blocksRaycasts = true;
-                canvasGroup.blocksRaycasts = true;
-
-                draggedHandler.canvasGroup.alpha = 1f;
-                canvasGroup.alpha = 1f;
-
-                // Ensure the draggedHandler's dragItem is destroyed when the drop is completed
-                if (draggedHandler.dragItem != null)
+                // Check if the target slot is valid for the dragged item
+                if (targetSlot != null && draggedSlot != null)
                 {
-                    Destroy(draggedHandler.dragItem);
-                    draggedHandler.dragItem = null;
+                    // If target slot is an equipment slot
+                    if (targetSlot.slotObject.GetComponent<InventorySlotUI>().isEquipmentSlot)
+                    {
+                        Debug.Log($"Target slot {targetSlot.slotObject.name} is an equipment slot.");
+                        if (draggedSlot.item != null)
+                        {
+                            Debug.Log($"Dragged item category: {draggedSlot.item.equipmentCategory}");
+                        }
+                        else
+                        {
+                            Debug.LogError("Dragged item is null.");
+                        }
+
+                        if (equipment != null && equipment.equipmentSlots.TryGetValue(draggedSlot.item.equipmentCategory, out InventorySlot correctSlot))
+                        {
+                            if (correctSlot == targetSlot)
+                            {
+                                equipment.EquipItem(draggedSlot.item);
+                                draggedSlot.SetItem(null, 0);
+                                Debug.Log($"Equipped item {draggedSlot.item?.itemName} to {targetSlot.slotObject.name}");
+                            }
+                            else
+                            {
+                                Debug.LogError("Invalid equipment slot!");
+                                draggedHandler.rectTransform.anchoredPosition = draggedHandler.originalPosition; // Snap back to original position
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            Debug.LogError("Equipment slot not found or Equipment component is null.");
+                            draggedHandler.rectTransform.anchoredPosition = draggedHandler.originalPosition; // Snap back to original position
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        InventoryItem tempItem = draggedSlot.item;
+                        int tempQuantity = draggedSlot.quantity;
+
+                        draggedSlot.SetItem(targetSlot.item, targetSlot.quantity);
+                        targetSlot.SetItem(tempItem, tempQuantity);
+
+                        draggedHandler.rectTransform.anchoredPosition = Vector2.zero;
+                        rectTransform.anchoredPosition = Vector2.zero;
+
+                        draggedSlot.SetTransformProperties();
+                        targetSlot.SetTransformProperties();
+
+                        draggedHandler.canvasGroup.blocksRaycasts = true;
+                        canvasGroup.blocksRaycasts = true;
+
+                        draggedHandler.canvasGroup.alpha = 1f;
+                        canvasGroup.alpha = 1f;
+
+                        // Ensure the draggedHandler's dragItem is destroyed when the drop is completed
+                        if (draggedHandler.dragItem != null)
+                        {
+                            Destroy(draggedHandler.dragItem);
+                            draggedHandler.dragItem = null;
+                        }
+                    }
                 }
             }
         }
@@ -169,4 +215,3 @@ public class InventoryDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandl
         }
     }
 }
-

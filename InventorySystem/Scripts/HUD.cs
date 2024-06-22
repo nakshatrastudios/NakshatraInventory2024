@@ -37,7 +37,7 @@ public class HUD : MonoBehaviour
         UpdateStaminaBar();
     }
 
-    void UpdateHealthBar()
+    public void UpdateHealthBar()
     {
         if (playerStatus != null && healthBarFill != null)
         {
@@ -45,7 +45,7 @@ public class HUD : MonoBehaviour
         }
     }
 
-    void UpdateManaBar()
+    public void UpdateManaBar()
     {
         if (playerStatus != null && manaBarFill != null)
         {
@@ -53,7 +53,7 @@ public class HUD : MonoBehaviour
         }
     }
 
-    void UpdateStaminaBar()
+    public void UpdateStaminaBar()
     {
         if (playerStatus != null && staminaBarFill != null)
         {

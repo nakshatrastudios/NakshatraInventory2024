@@ -8,6 +8,8 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
     public GameObject itemActionPrefab; // Assign this in the inspector
     private static GameObject currentItemActionUI;
     private Canvas parentCanvas;
+    public bool isEquipmentSlot; // Indicates if this slot is for equipment
+
 
     private void Awake()
     {
@@ -37,6 +39,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        Debug.Log($"Slot clicked: {gameObject.name}, Button: {eventData.button}, Item: {(slot.item != null ? slot.item.itemName : "None")}");
         if (currentItemActionUI != null)
         {
             Destroy(currentItemActionUI);
@@ -45,7 +48,12 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
 
         if (eventData.button == PointerEventData.InputButton.Right && slot.item != null)
         {
+            Debug.Log($"Right-clicked on item: {slot.item.itemName}");
             ShowItemActionUI(slot.item);
+        }
+        else
+        {
+            Debug.Log("Right-clicked on empty slot or left-clicked.");
         }
     }
 
@@ -89,7 +97,8 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
         ItemActionUI itemActionUI = currentItemActionUI.GetComponent<ItemActionUI>();
         if (itemActionUI != null)
         {
-            itemActionUI.ConfigureButtons(item, this);
+            Equipment playerEquipment = GameObject.FindWithTag("Player")?.GetComponent<Equipment>();
+            itemActionUI.ConfigureButtons(item, this, playerEquipment);
         }
     }
 

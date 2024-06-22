@@ -68,8 +68,7 @@ public class Inventory : MonoBehaviour
             {
                 int amountToAdd = Mathf.Min(quantity, item.maxStackSize - existingSlot.quantity);
                 existingSlot.quantity += amountToAdd;
-                existingSlot.stackText.text = existingSlot.quantity > 1 ? existingSlot.quantity.ToString() : "";
-                existingSlot.stackText.enabled = existingSlot.quantity > 1;
+                existingSlot.stackText.text = existingSlot.quantity.ToString();
                 quantity -= amountToAdd;
             }
             else
@@ -104,8 +103,7 @@ public class Inventory : MonoBehaviour
             }
             else
             {
-                existingSlot.stackText.text = existingSlot.quantity > 1 ? existingSlot.quantity.ToString() : "";
-                existingSlot.stackText.enabled = existingSlot.quantity > 1;
+                existingSlot.stackText.text = existingSlot.quantity.ToString();
             }
         }
         else
@@ -136,12 +134,10 @@ public class Inventory : MonoBehaviour
                 if (slot.quantity > 1)
                 {
                     slot.stackText.text = slot.quantity.ToString();
-                    slot.stackText.enabled = true;
                 }
                 else
                 {
                     slot.stackText.text = "";
-                    slot.stackText.enabled = false;
                 }
             }
         }

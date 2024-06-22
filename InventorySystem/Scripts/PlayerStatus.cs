@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerStatus : MonoBehaviour
@@ -17,6 +18,14 @@ public class PlayerStatus : MonoBehaviour
     public int Speed = 10;
     public int Dexterity = 10;
     public int Luck = 10;
+
+    private HUD hud;
+
+    private void Start()
+    {
+        hud = FindObjectOfType<HUD>();
+        UpdateHUD();
+    }
 
     public void AddStat(StatType statType, int value)
     {
@@ -69,6 +78,77 @@ public class PlayerStatus : MonoBehaviour
                 break;
                 // Add other stat cases as needed
         }
+        UpdateHUD();
+    }
+
+    public void AddStats(List<ItemStat> stats)
+    {
+        foreach (var stat in stats)
+        {
+            AddStat(stat.statType, stat.value);
+        }
+    }
+
+    public void RemoveStat(StatType statType, int value)
+    {
+        switch (statType)
+        {
+            case StatType.Strength:
+                Strength -= value;
+                break;
+            case StatType.Agility:
+                Agility -= value;
+                break;
+            case StatType.Intelligence:
+                Intelligence -= value;
+                break;
+            case StatType.Attack:
+                Attack -= value;
+                break;
+            case StatType.Defense:
+                Defense -= value;
+                break;
+            case StatType.Block:
+                Block -= value;
+                break;
+            case StatType.Health:
+                Health = Mathf.Max(Health - value, 0);
+                break;
+            case StatType.MaxHealth:
+                MaxHealth -= value;
+                break;
+            case StatType.Mana:
+                Mana = Mathf.Max(Mana - value, 0);
+                break;
+            case StatType.MaxMana:
+                MaxMana -= value;
+                break;
+            case StatType.Stamina:
+                Stamina = Mathf.Max(Stamina - value, 0);
+                break;
+            case StatType.MaxStamina:
+                MaxStamina -= value;
+                break;
+            case StatType.Speed:
+                Speed -= value;
+                break;
+            case StatType.Dexterity:
+                Dexterity -= value;
+                break;
+            case StatType.Luck:
+                Luck -= value;
+                break;
+                // Add other stat cases as needed
+        }
+        UpdateHUD();
+    }
+
+    public void RemoveStats(List<ItemStat> stats)
+    {
+        foreach (var stat in stats)
+        {
+            RemoveStat(stat.statType, stat.value);
+        }
     }
 
     public int GetStat(StatType statType)
@@ -108,6 +188,16 @@ public class PlayerStatus : MonoBehaviour
             // Add other stat cases as needed
             default:
                 return 0;
+        }
+    }
+
+    private void UpdateHUD()
+    {
+        if (hud != null)
+        {
+            hud.UpdateHealthBar();
+            hud.UpdateManaBar();
+            hud.UpdateStaminaBar();
         }
     }
 }

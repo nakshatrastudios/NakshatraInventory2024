@@ -14,19 +14,25 @@ public class InventorySlot
     {
         item = newItem;
         quantity = newQuantity;
+
         if (item != null)
         {
             itemIcon.sprite = item.itemIcon;
             itemIcon.enabled = true;
             itemIcon.color = new Color(itemIcon.color.r, itemIcon.color.g, itemIcon.color.b, 1); // Make the icon fully visible
 
-            stackText.text = quantity.ToString();
-
+            stackText.text = quantity > 1 ? quantity.ToString() : "";
+            stackText.enabled = true;
+            Debug.Log($"Item set: {item.itemName} in slot: {slotObject.name} with quantity: {quantity}");
         }
         else
         {
-            itemIcon.enabled = false;
+            itemIcon.sprite = null;
+            itemIcon.enabled = true;
+            itemIcon.color = new Color(itemIcon.color.r, itemIcon.color.g, itemIcon.color.b, 0);
             stackText.text = "";
+            stackText.enabled = true;
+            Debug.Log($"Item removed from slot: {slotObject.name}");
         }
 
         SetTransformProperties();
@@ -90,12 +96,13 @@ public class InventorySlot
     {
         if (item != null)
         {
+            Debug.Log($"Used item: {item.itemName}");
             if (item.itemType == ItemType.Consumable)
             {
-                foreach (var stat in item.stats)
+                PlayerStatus playerStatus = GameObject.FindWithTag("Player").GetComponent<PlayerStatus>();
+                if (playerStatus != null)
                 {
-                    PlayerStatus playerStatus = GameObject.FindWithTag("Player").GetComponent<PlayerStatus>();
-                    playerStatus.AddStat(stat.statType, stat.value);
+                    playerStatus.AddStats(item.stats);
                 }
 
                 quantity--;
@@ -110,14 +117,29 @@ public class InventorySlot
             }
             else if (item.itemType == ItemType.Equipment)
             {
-                // Implement equipment logic here
+                Equipment equipment = GameObject.FindWithTag("Player").GetComponent<Equipment>();
+                if (equipment != null)
+                {
+                    equipment.EquipItem(item);
+                    quantity--;
+                    if (quantity <= 0)
+                    {
+                        SetItem(null, 0);
+                    }
+                    else
+                    {
+                        stackText.text = "";
+                    }
+                }
+                else
+                {
+                    Debug.LogError("Equipment component not found on the Player GameObject.");
+                }
             }
-
-            Debug.Log($"Used item: {item.itemName}");
         }
         else
         {
-            Debug.LogError("No item to use.");
+            Debug.Log("No item to use.");
         }
     }
 }

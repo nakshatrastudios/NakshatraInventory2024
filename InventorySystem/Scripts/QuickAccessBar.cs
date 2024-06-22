@@ -9,7 +9,7 @@ public class QuickAccessBar : MonoBehaviour
     public Transform quickAccessGrid;
     public GameObject buttonNumberTextPrefab; // Assign a Text prefab with the necessary settings
 
-    public List<InventorySlot> quickAccessSlots = new List<InventorySlot>();
+    private List<InventorySlot> quickAccessSlots = new List<InventorySlot>();
     private PlayerStatus playerStatus;
 
     private void Start()

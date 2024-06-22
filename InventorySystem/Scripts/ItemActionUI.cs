@@ -5,11 +5,13 @@ public class ItemActionUI : MonoBehaviour
 {
     public Button useButton;
     public Button equipButton;
+    public Button unequipButton;
     public Button dropButton;
+    public Button splitButton;
 
     private InventorySlotUI parentSlotUI;
-
     private Inventory playerInventory;
+    private Equipment playerEquipment;
 
     private void Start()
     {
@@ -17,9 +19,14 @@ public class ItemActionUI : MonoBehaviour
         if (player != null)
         {
             playerInventory = player.GetComponent<Inventory>();
+            playerEquipment = player.GetComponent<Equipment>();
             if (playerInventory == null)
             {
                 Debug.LogError("Inventory component not found on player.");
+            }
+            if (playerEquipment == null)
+            {
+                Debug.LogError("Equipment component not found on player.");
             }
         }
         else
@@ -28,20 +35,24 @@ public class ItemActionUI : MonoBehaviour
         }
     }
 
-    public void ConfigureButtons(InventoryItem item, InventorySlotUI slotUI)
+    public void ConfigureButtons(InventoryItem item, InventorySlotUI slotUI, Equipment equipment)
     {
         parentSlotUI = slotUI;
 
         useButton.gameObject.SetActive(item.itemType == ItemType.Consumable);
-        equipButton.gameObject.SetActive(item.itemType == ItemType.Equipment);
+        equipButton.gameObject.SetActive(item.itemType == ItemType.Equipment && !slotUI.isEquipmentSlot);
+        unequipButton.gameObject.SetActive(slotUI.isEquipmentSlot);
         dropButton.gameObject.SetActive(true); // Drop button is always enabled
+        splitButton.gameObject.SetActive(false);
 
         useButton.onClick.RemoveAllListeners();
         equipButton.onClick.RemoveAllListeners();
+        unequipButton.onClick.RemoveAllListeners();
         dropButton.onClick.RemoveAllListeners();
 
         useButton.onClick.AddListener(() => UseItem(item, slotUI.slot));
         equipButton.onClick.AddListener(() => EquipItem(item, slotUI.slot));
+        unequipButton.onClick.AddListener(() => UnequipItem(item, slotUI.slot));
         dropButton.onClick.AddListener(() => DropItem(item, slotUI.slot));
     }
 
@@ -59,7 +70,24 @@ public class ItemActionUI : MonoBehaviour
     private void EquipItem(InventoryItem item, InventorySlot slot)
     {
         Debug.Log($"Equipping {item.itemName}");
-        // Implement item equipping logic here
+        if (playerEquipment != null)
+        {
+            playerEquipment.EquipItem(item);
+        }
+        if (playerInventory != null)
+        {
+            playerInventory.RemoveItemFromSlot(slot, 1); // Remove the equipped item from the specific slot
+        }
+        CloseActionUI();
+    }
+
+    private void UnequipItem(InventoryItem item, InventorySlot slot)
+    {
+        Debug.Log($"Unequipping {item.itemName}");
+        if (playerEquipment != null)
+        {
+            playerEquipment.UnequipItem(item);
+        }
         CloseActionUI();
     }
 

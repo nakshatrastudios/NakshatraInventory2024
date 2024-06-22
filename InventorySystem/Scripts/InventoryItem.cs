@@ -50,7 +50,8 @@ public enum EquipmentCategory
     Necklace,
     Belt,
     Earrings,
-    Back // For cloak
+    Back, // For cloak
+
 }
 
 public enum WeaponType
