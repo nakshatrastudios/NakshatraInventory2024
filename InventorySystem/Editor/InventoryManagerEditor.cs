@@ -1,11 +1,11 @@
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UI;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class InventoryManagerEditor : EditorWindow
 {
-    private enum Tab { CreateInventory, CreateItem, SetupItem, CreateQuickAccessBar }
+    private enum Tab { CreateInventory, CreateItem, CreateQuickAccessBar, ItemDatabase }
     private Tab currentTab = Tab.CreateInventory;
 
     // Variables for Create Inventory
@@ -47,8 +47,9 @@ public class InventoryManagerEditor : EditorWindow
 
     // Variables for Setup Item
     private InventoryItem item;
-    private GameObject itemPrefab;
+    private List<GameObject> itemPrefabs = new List<GameObject>();
     private GameObject pickupTextPrefab;
+    private GameObject itemPickupPrefab;
     private float sphereRadius = 1.0f;
     private float sphereHeight = -0.5f;
 
@@ -64,6 +65,17 @@ public class InventoryManagerEditor : EditorWindow
     private Vector2 quickAccessGridSpacing;
     private Vector2 quickAccessCellSize;
     private float quickAccessBackgroundPaddingPercentage = 17f;
+
+    // New fields for bone setup
+    private bool setBone;
+    private List<string> selectedBoneNames = new List<string>();
+    private List<Vector3> itemPositions = new List<Vector3>();
+    private List<Vector3> itemRotations = new List<Vector3>();
+
+    // Variables for Item Database
+    private ItemDB itemDB;
+    private List<InventoryItem> dbItems = new List<InventoryItem>();
+    private Vector2 itemScrollPos;
 
     [MenuItem("Inventory System/Inventory Manager")]
     public static void ShowWindow()
@@ -128,13 +140,13 @@ public class InventoryManagerEditor : EditorWindow
         {
             currentTab = Tab.CreateItem;
         }
-        if (GUILayout.Button("Setup Item"))
-        {
-            currentTab = Tab.SetupItem;
-        }
         if (GUILayout.Button("Create Quick Access Bar"))
         {
             currentTab = Tab.CreateQuickAccessBar;
+        }
+        if (GUILayout.Button("Item Database"))
+        {
+            currentTab = Tab.ItemDatabase;
         }
         EditorGUILayout.EndVertical();
     }
@@ -152,13 +164,13 @@ public class InventoryManagerEditor : EditorWindow
                 DrawCreateInventory();
                 break;
             case Tab.CreateItem:
-                DrawCreateItem();
-                break;
-            case Tab.SetupItem:
-                DrawSetupItem();
+                DrawCreateAndSetupItem();
                 break;
             case Tab.CreateQuickAccessBar:
                 DrawCreateQuickAccessBar();
+                break;
+            case Tab.ItemDatabase:
+                DrawItemDatabase();
                 break;
         }
         EditorGUILayout.EndVertical();
@@ -447,7 +459,7 @@ public class InventoryManagerEditor : EditorWindow
         Debug.Log("Inventory, HUD, and Currency system created successfully.");
     }
 
-    private void DrawCreateItem()
+    private void DrawCreateAndSetupItem()
     {
         GUILayout.Label("Item Settings", EditorStyles.boldLabel);
         itemName = EditorGUILayout.TextField("Item Name", itemName);
@@ -516,17 +528,74 @@ public class InventoryManagerEditor : EditorWindow
             }
         }
 
+        GUILayout.Label("Item Setup", EditorStyles.boldLabel);
+        itemPickupPrefab = (GameObject)EditorGUILayout.ObjectField("Item Pickup Prefab", itemPickupPrefab, typeof(GameObject), false);
+        pickupTextPrefab = (GameObject)EditorGUILayout.ObjectField("Pickup Text Prefab", pickupTextPrefab, typeof(GameObject), false);
+
+        EditorGUILayout.LabelField("Item Prefabs");
+        for (int i = 0; i < itemPrefabs.Count; i++)
+        {
+            EditorGUILayout.BeginHorizontal();
+            itemPrefabs[i] = (GameObject)EditorGUILayout.ObjectField($"Item Prefab {i + 1}", itemPrefabs[i], typeof(GameObject), false);
+            if (GUILayout.Button("Remove"))
+            {
+                itemPrefabs.RemoveAt(i);
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+        if (GUILayout.Button("Add Item Prefab"))
+        {
+            itemPrefabs.Add(null);
+        }
+
+        GUILayout.Label("Collider Settings", EditorStyles.boldLabel);
+        sphereRadius = EditorGUILayout.FloatField("Sphere Radius", sphereRadius);
+        sphereHeight = EditorGUILayout.FloatField("Sphere Height", sphereHeight);
+
+        // New fields for bone setup
+        setBone = EditorGUILayout.Toggle("Set Bone", setBone);
+        if (setBone)
+        {
+            EditorGUILayout.LabelField("Bone Settings");
+            for (int i = 0; i < selectedBoneNames.Count; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                selectedBoneNames[i] = EditorGUILayout.TextField($"Bone Name {i + 1}", selectedBoneNames[i]);
+                itemPositions[i] = EditorGUILayout.Vector3Field($"Position {i + 1}", itemPositions[i]);
+                itemRotations[i] = EditorGUILayout.Vector3Field($"Rotation {i + 1}", itemRotations[i]);
+                if (GUILayout.Button("Remove"))
+                {
+                    selectedBoneNames.RemoveAt(i);
+                    itemPositions.RemoveAt(i);
+                    itemRotations.RemoveAt(i);
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+            if (GUILayout.Button("Add Bone"))
+            {
+                selectedBoneNames.Add("");
+                itemPositions.Add(Vector3.zero);
+                itemRotations.Add(Vector3.zero);
+            }
+        }
+
         if (GUILayout.Button("Create Item"))
         {
-            CreateItem();
+            CreateAndSetupItem();
         }
     }
 
-    private void CreateItem()
+    private void CreateAndSetupItem()
     {
         if (string.IsNullOrEmpty(itemName))
         {
             Debug.LogError("Item name is required.");
+            return;
+        }
+
+        if (itemPickupPrefab == null || pickupTextPrefab == null)
+        {
+            Debug.LogError("Please assign the Item Pickup Prefab and Pickup Text Prefab.");
             return;
         }
 
@@ -551,6 +620,18 @@ public class InventoryManagerEditor : EditorWindow
         newItem.isMainHand = isMainHand;
         newItem.isOffHand = isOffHand;
         newItem.stats = new List<ItemStat>(itemStats);
+        newItem.itemPrefabs = new List<GameObject>(itemPrefabs); // Assign the list of item prefabs
+        newItem.pickupTextPrefab = pickupTextPrefab;
+        newItem.itemPickupPrefab = itemPickupPrefab;
+
+        // Set bone attachment details if applicable
+        if (setBone)
+        {
+            newItem.setBone = true;
+            newItem.selectedBoneNames = new List<string>(selectedBoneNames);
+            newItem.itemPositions = new List<Vector3>(itemPositions);
+            newItem.itemRotations = new List<Vector3>(itemRotations);
+        }
 
         // Set currency amounts if item type is Currency
         if (itemType == ItemType.Currency)
@@ -563,69 +644,29 @@ public class InventoryManagerEditor : EditorWindow
         AssetDatabase.CreateAsset(newItem, itemPath);
         AssetDatabase.SaveAssets();
 
-        Debug.Log("Item created successfully.");
+        // Setup the item prefab
+        SetupItem(newItem);
+
+        Debug.Log("Item created and setup successfully.");
     }
 
-    private void DrawSetupItem()
+    private void SetupItem(InventoryItem newItem)
     {
-        GUILayout.Label("Item Setup", EditorStyles.boldLabel);
-        item = (InventoryItem)EditorGUILayout.ObjectField("Item", item, typeof(InventoryItem), false);
-        itemPrefab = (GameObject)EditorGUILayout.ObjectField("Item Prefab", itemPrefab, typeof(GameObject), false);
-        pickupTextPrefab = (GameObject)EditorGUILayout.ObjectField("Pickup Text Prefab", pickupTextPrefab, typeof(GameObject), false);
-
-        GUILayout.Label("Collider Settings", EditorStyles.boldLabel);
-        sphereRadius = EditorGUILayout.FloatField("Sphere Radius", sphereRadius);
-        sphereHeight = EditorGUILayout.FloatField("Sphere Height", sphereHeight);
-
-        if (item != null && item.itemType == ItemType.Currency)
-        {
-            GUILayout.Label("Currency Amounts", EditorStyles.boldLabel);
-            List<string> keys = new List<string>(currencyAmounts.Keys);
-            foreach (var key in keys)
-            {
-                if (!currencyAmounts.ContainsKey(key))
-                {
-                    currencyAmounts[key] = 0;
-                }
-                currencyAmounts[key] = EditorGUILayout.IntField(key, currencyAmounts[key]);
-            }
-        }
-
-        if (GUILayout.Button("Setup Item"))
-        {
-            SetupItem();
-        }
-    }
-
-    private void SetupItem()
-    {
-        if (item == null || itemPrefab == null || pickupTextPrefab == null)
-        {
-            Debug.LogError("Please assign all required fields.");
-            return;
-        }
-
-        // Ensure Resources folder exists
         string resourcesPath = "Assets/Resources";
-        if (!AssetDatabase.IsValidFolder(resourcesPath))
-        {
-            AssetDatabase.CreateFolder("Assets", "Resources");
-        }
-
-        string itemPath = resourcesPath + "/" + item.itemName + ".prefab";
-        GameObject itemInstance = Instantiate(itemPrefab);
-        itemInstance.name = item.itemName;
+        string itemPath = resourcesPath + "/" + newItem.itemName + ".prefab";
+        GameObject itemInstance = Instantiate(newItem.itemPickupPrefab); // Use the pickup prefab from the item
+        itemInstance.name = newItem.itemName;
 
         SphereCollider collider = itemInstance.AddComponent<SphereCollider>();
         collider.radius = sphereRadius;
         collider.center = new Vector3(0, sphereHeight, 0);
         collider.isTrigger = true;
 
-        if (item.itemType == ItemType.Currency)
+        if (newItem.itemType == ItemType.Currency)
         {
             CurrencyPickup currencyPickup = itemInstance.AddComponent<CurrencyPickup>();
             currencyPickup.pickupTextPrefab = pickupTextPrefab;
-            foreach (var currency in currencyAmounts)
+            foreach (var currency in newItem.currencyAmounts)
             {
                 currencyPickup.currencyAmounts.Add(new CurrencyPickup.CurrencyAmount
                 {
@@ -637,15 +678,13 @@ public class InventoryManagerEditor : EditorWindow
         else
         {
             ItemPickup itemPickup = itemInstance.AddComponent<ItemPickup>();
-            itemPickup.item = item;
+            itemPickup.item = newItem;
             itemPickup.pickupTextPrefab = pickupTextPrefab;
         }
 
         // Save the new prefab to the Resources folder
         PrefabUtility.SaveAsPrefabAsset(itemInstance, itemPath);
         DestroyImmediate(itemInstance);
-
-        Debug.Log("Item setup successfully.");
     }
 
     private void DrawCreateQuickAccessBar()
@@ -749,6 +788,55 @@ public class InventoryManagerEditor : EditorWindow
         quickAccessBarComponent.buttonNumberTextPrefab = buttonNumberTextPrefab; // Assign the button number text prefab
 
         Debug.Log("Quick Access Bar created successfully.");
+    }
+
+    private void DrawItemDatabase()
+    {
+        GUILayout.Label("Item Database", EditorStyles.boldLabel);
+        itemDB = (ItemDB)EditorGUILayout.ObjectField("Item Database", itemDB, typeof(ItemDB), false);
+
+        if (itemDB == null)
+        {
+            EditorGUILayout.HelpBox("Please assign an ItemDB ScriptableObject.", MessageType.Warning);
+            return;
+        }
+
+        if (GUILayout.Button("Load Items to Database"))
+        {
+            LoadItemsToDatabase();
+        }
+
+        GUILayout.Label("Items in Database:", EditorStyles.boldLabel);
+        itemScrollPos = EditorGUILayout.BeginScrollView(itemScrollPos, GUILayout.Height(400));
+        foreach (var item in itemDB.items)
+        {
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label(item.itemName);
+            EditorGUILayout.ObjectField(item.itemIcon, typeof(Sprite), false, GUILayout.Width(50), GUILayout.Height(50));
+            EditorGUILayout.EndHorizontal();
+        }
+        EditorGUILayout.EndScrollView();
+    }
+
+    private void LoadItemsToDatabase()
+    {
+        if (itemDB == null)
+        {
+            Debug.LogError("ItemDB is not assigned.");
+            return;
+        }
+
+        itemDB.items.Clear();
+        InventoryItem[] allItems = Resources.LoadAll<InventoryItem>("");
+
+        foreach (InventoryItem item in allItems)
+        {
+            itemDB.items.Add(item);
+            Debug.Log("Added item to ItemDB: " + item.itemName);
+        }
+
+        EditorUtility.SetDirty(itemDB); // Mark the scriptable object as dirty to save changes
+        Debug.Log("ItemDB loaded with all items.");
     }
 
     [System.Serializable]

@@ -25,15 +25,27 @@ public class InventoryItem : ScriptableObject
     // Dynamic stats
     public List<ItemStat> stats = new List<ItemStat>();
 
+    public bool setBone = false;
+
     // Currency specific
     public Dictionary<string, int> currencyAmounts = new Dictionary<string, int>();
+
+    // New fields for bone attachment
+    public List<string> selectedBoneNames = new List<string>();
+    public List<GameObject> itemPrefabs = new List<GameObject>();
+    public List<Vector3> itemPositions = new List<Vector3>();
+    public List<Vector3> itemRotations = new List<Vector3>();
+
+    // Pickup specific
+    public GameObject itemPickupPrefab;
+    public GameObject pickupTextPrefab;
 }
 
 public enum ItemType
 {
     Consumable,
     Equipment,
-    Currency, // Added Currency type
+    Currency,
     Other
 }
 
@@ -50,8 +62,7 @@ public enum EquipmentCategory
     Necklace,
     Belt,
     Earrings,
-    Back, // For cloak
-
+    Back,
 }
 
 public enum WeaponType

@@ -50,6 +50,13 @@ public class InventorySlot
             canvasGroup.alpha = 1;
             canvasGroup.blocksRaycasts = true;
         }
+
+        // Update InventoryDragHandler
+        InventoryDragHandler dragHandler = slotObject.transform.Find("DraggableItem").GetComponent<InventoryDragHandler>();
+        if (dragHandler != null)
+        {
+            dragHandler.slot = this;
+        }
     }
 
     public void SetTransformProperties()
@@ -116,7 +123,7 @@ public class InventorySlot
                 PlayerStatus playerStatus = GameObject.FindWithTag("Player").GetComponent<PlayerStatus>();
                 if (playerStatus != null)
                 {
-                    playerStatus.AddStats(item.stats);
+                    playerStatus.ApplyConsumableEffects(item.stats);
                 }
 
                 quantity--;
@@ -134,15 +141,22 @@ public class InventorySlot
                 Equipment equipment = GameObject.FindWithTag("Player").GetComponent<Equipment>();
                 if (equipment != null)
                 {
-                    equipment.EquipItem(item);
-                    quantity--;
-                    if (quantity <= 0)
+                    if (equipment.IsItemEquipped(item))
                     {
-                        SetItem(null, 0);
+                        equipment.UnequipItem(item);
                     }
                     else
                     {
-                        stackText.text = "";
+                        equipment.EquipItem(item);
+                        quantity--;
+                        if (quantity <= 0)
+                        {
+                            SetItem(null, 0);
+                        }
+                        else
+                        {
+                            stackText.text = "";
+                        }
                     }
                 }
                 else

@@ -10,15 +10,14 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
     private Canvas parentCanvas;
     public bool isEquipmentSlot; // Indicates if this slot is for equipment
 
+    private float lastClickTime;
+    private const float doubleClickThreshold = 0.3f; // Adjust as needed
 
     private void Awake()
     {
-        slot = new InventorySlot
-        {
-            slotObject = gameObject,
-            stackText = transform.Find("DraggableItem/StackText")?.GetComponent<Text>(),
-            itemIcon = transform.Find("DraggableItem/ItemIcon")?.GetComponent<Image>()
-        };
+        slot.slotObject = gameObject;
+        slot.stackText = transform.Find("DraggableItem/StackText")?.GetComponent<Text>();
+        slot.itemIcon = transform.Find("DraggableItem/ItemIcon")?.GetComponent<Image>();
 
         if (slot.stackText == null)
         {
@@ -46,7 +45,15 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
             currentItemActionUI = null;
         }
 
-        if (eventData.button == PointerEventData.InputButton.Right && slot.item != null)
+        if (eventData.button == PointerEventData.InputButton.Left)
+        {
+            if (Time.time - lastClickTime < doubleClickThreshold)
+            {
+                HandleDoubleClick();
+            }
+            lastClickTime = Time.time;
+        }
+        else if (eventData.button == PointerEventData.InputButton.Right && slot.item != null)
         {
             Debug.Log($"Right-clicked on item: {slot.item.itemName}");
             ShowItemActionUI(slot.item);
@@ -54,6 +61,14 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
         else
         {
             Debug.Log("Right-clicked on empty slot or left-clicked.");
+        }
+    }
+
+    private void HandleDoubleClick()
+    {
+        if (slot != null && slot.item != null)
+        {
+            slot.UseItem();
         }
     }
 
@@ -109,5 +124,11 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
             Destroy(currentItemActionUI);
             currentItemActionUI = null;
         }
+    }
+
+    private void OnEnable()
+    {
+        // Ensure the UI gets updated when the canvas is enabled
+        slot.SetItem(slot.item, slot.quantity);
     }
 }

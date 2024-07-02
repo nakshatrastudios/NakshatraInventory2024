@@ -14,6 +14,9 @@ public class Inventory : MonoBehaviour
     public List<InventorySlot> inventorySlots = new List<InventorySlot>();
     public int currentPage = 0;
     private int pages;
+    public List<InventoryItem> allItemsList; // Add this to your script to hold all possible items
+
+    public ItemDB itemDB;
 
     public int Pages
     {
@@ -25,6 +28,16 @@ public class Inventory : MonoBehaviour
         SetupInventoryUI();
         nextPageButton.onClick.AddListener(NextPage);
         previousPageButton.onClick.AddListener(PreviousPage);
+
+        if (itemDB != null)
+        {
+            PopulateAllItemsList();
+        }
+    }
+
+    public void PopulateAllItemsList()
+    {
+        allItemsList = itemDB.items;
     }
 
     public void SetupInventoryUI()
@@ -58,8 +71,31 @@ public class Inventory : MonoBehaviour
         UpdatePage();
     }
 
-    public void AddItem(InventoryItem item, int quantity = 1)
+    public void AddItem(InventoryItem item, int quantity = 1, InventorySlot specificSlot = null)
     {
+        if (specificSlot != null)
+        {
+            if (specificSlot.item == null)
+            {
+                int amountToAdd = Mathf.Min(quantity, item.maxStackSize);
+                specificSlot.SetItem(item, amountToAdd);
+                specificSlot.SetTransformProperties();
+                return; // Exit the method after setting the item in the specific slot
+            }
+            else if (specificSlot.item == item && specificSlot.quantity < item.maxStackSize)
+            {
+                int amountToAdd = Mathf.Min(quantity, item.maxStackSize - specificSlot.quantity);
+                specificSlot.quantity += amountToAdd;
+                specificSlot.stackText.text = specificSlot.quantity.ToString();
+                return; // Exit the method after adding to the stack in the specific slot
+            }
+            else
+            {
+                Debug.LogWarning("Specific slot is full or item mismatch!");
+            }
+        }
+
+        // Default behavior if no specific slot or specific slot couldn't be used
         while (quantity > 0)
         {
             InventorySlot existingSlot = FindItemSlot(item);
@@ -147,6 +183,15 @@ public class Inventory : MonoBehaviour
         }
     }
 
+    public void ClearItems()
+    {
+        foreach (var slot in inventorySlots)
+        {
+            slot.SetItem(null, 0);
+        }
+    }
+
+
     private InventorySlot FindItemSlot(InventoryItem item)
     {
         return inventorySlots.Find(slot => slot.item == item && slot.quantity < item.maxStackSize);
@@ -196,5 +241,41 @@ public class Inventory : MonoBehaviour
 
         nextPageButton.interactable = currentPage < Pages - 1;
         previousPageButton.interactable = currentPage > 0;
+    }
+
+    public List<InventoryItemData> GetItems()
+    {
+        List<InventoryItemData> items = new List<InventoryItemData>();
+        foreach (var slot in inventorySlots)
+        {
+            if (slot.item != null)
+            {
+                items.Add(new InventoryItemData { itemName = slot.item.itemName, quantity = slot.quantity });
+                Debug.Log($"Saved Inventory Item: {slot.item.itemName} with Quantity: {slot.quantity}");
+            }
+        }
+        return items;
+    }
+
+    public void LoadItems(List<InventoryItemData> items)
+    {
+        foreach (var itemData in items)
+        {
+            InventoryItem item = FindItemByName(itemData.itemName);
+            if (item != null)
+            {
+                AddItem(item, itemData.quantity);
+                Debug.Log($"Loaded Inventory Item: {item.itemName} with Quantity: {itemData.quantity}");
+            }
+            else
+            {
+                Debug.LogWarning($"Item {itemData.itemName} not found in allItemsList.");
+            }
+        }
+    }
+
+    private InventoryItem FindItemByName(string itemName)
+    {
+        return allItemsList.Find(item => item.itemName == itemName);
     }
 }

@@ -54,18 +54,21 @@ public class PlayerStatus : MonoBehaviour
                 break;
             case StatType.MaxHealth:
                 MaxHealth += value;
+                Health = Mathf.Min(Health, MaxHealth); // Ensure Health does not exceed MaxHealth
                 break;
             case StatType.Mana:
                 Mana = Mathf.Min(Mana + value, MaxMana);
                 break;
             case StatType.MaxMana:
                 MaxMana += value;
+                Mana = Mathf.Min(Mana, MaxMana); // Ensure Mana does not exceed MaxMana
                 break;
             case StatType.Stamina:
                 Stamina = Mathf.Min(Stamina + value, MaxStamina);
                 break;
             case StatType.MaxStamina:
                 MaxStamina += value;
+                Stamina = Mathf.Min(Stamina, MaxStamina); // Ensure Stamina does not exceed MaxStamina
                 break;
             case StatType.Speed:
                 Speed += value;
@@ -116,18 +119,21 @@ public class PlayerStatus : MonoBehaviour
                 break;
             case StatType.MaxHealth:
                 MaxHealth -= value;
+                Health = Mathf.Min(Health, MaxHealth); // Ensure Health does not exceed MaxHealth
                 break;
             case StatType.Mana:
                 Mana = Mathf.Max(Mana - value, 0);
                 break;
             case StatType.MaxMana:
                 MaxMana -= value;
+                Mana = Mathf.Min(Mana, MaxMana); // Ensure Mana does not exceed MaxMana
                 break;
             case StatType.Stamina:
                 Stamina = Mathf.Max(Stamina - value, 0);
                 break;
             case StatType.MaxStamina:
                 MaxStamina -= value;
+                Stamina = Mathf.Min(Stamina, MaxStamina); // Ensure Stamina does not exceed MaxStamina
                 break;
             case StatType.Speed:
                 Speed -= value;
@@ -149,6 +155,10 @@ public class PlayerStatus : MonoBehaviour
         {
             RemoveStat(stat.statType, stat.value);
         }
+        Health = Mathf.Min(Health, MaxHealth);
+        Mana = Mathf.Min(Mana, MaxMana);
+        Stamina = Mathf.Min(Stamina, MaxStamina);
+        UpdateHUD();
     }
 
     public int GetStat(StatType statType)
@@ -198,6 +208,14 @@ public class PlayerStatus : MonoBehaviour
             hud.UpdateHealthBar();
             hud.UpdateManaBar();
             hud.UpdateStaminaBar();
+        }
+    }
+
+    public void ApplyConsumableEffects(List<ItemStat> stats)
+    {
+        foreach (var stat in stats)
+        {
+            AddStat(stat.statType, stat.value);
         }
     }
 }

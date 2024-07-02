@@ -15,6 +15,7 @@ public class InventoryDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandl
 
     private GameObject dragItem;
     private RectTransform dragRectTransform;
+    private Canvas dragCanvas;
 
     private void Awake()
     {
@@ -33,9 +34,12 @@ public class InventoryDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandl
             canvasGroup.alpha = 0.6f;
             canvasGroup.blocksRaycasts = false;
 
+            // Create a new canvas for dragging
+            dragCanvas = new GameObject("DragCanvas").AddComponent<Canvas>();
+            dragCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            dragCanvas.sortingOrder = 1000; // Ensure this is on top
             dragItem = new GameObject("DragItem");
-            dragItem.transform.SetParent(canvas.transform, true);
-            dragItem.transform.SetAsLastSibling();
+            dragItem.transform.SetParent(dragCanvas.transform, false);
 
             Image dragImage = dragItem.AddComponent<Image>();
             dragImage.sprite = slot.itemIcon.sprite;
@@ -52,9 +56,11 @@ public class InventoryDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandl
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (dragItem != null)
+        if (dragRectTransform != null)
         {
-            dragRectTransform.position = Input.mousePosition;
+            Vector2 position;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(dragCanvas.transform as RectTransform, Input.mousePosition, eventData.pressEventCamera, out position);
+            dragRectTransform.localPosition = position;
 
             if (inventory != null && inventory.nextPageButton != null && inventory.previousPageButton != null)
             {
@@ -88,6 +94,12 @@ public class InventoryDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandl
         {
             Destroy(dragItem);
             dragItem = null;
+        }
+
+        if (dragCanvas != null)
+        {
+            Destroy(dragCanvas.gameObject);
+            dragCanvas = null;
         }
 
         if (slot.item != null)
@@ -137,71 +149,89 @@ public class InventoryDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandl
 
                 Debug.Log($"Dragging item: {draggedSlot.item?.itemName} to target slot: {targetSlot.slotObject.name}");
 
-                // Check if the target slot is valid for the dragged item
-                if (targetSlot != null && draggedSlot != null)
+                if (draggedSlot.item == null)
                 {
-                    // If target slot is an equipment slot
-                    if (targetSlot.slotObject.GetComponent<InventorySlotUI>().isEquipmentSlot)
-                    {
-                        Debug.Log($"Target slot {targetSlot.slotObject.name} is an equipment slot.");
-                        if (draggedSlot.item != null)
-                        {
-                            Debug.Log($"Dragged item category: {draggedSlot.item.equipmentCategory}");
-                        }
-                        else
-                        {
-                            Debug.LogError("Dragged item is null.");
-                        }
+                    Debug.LogError("Dragged item is null.");
+                    return;
+                }
 
-                        if (equipment != null && equipment.equipmentSlots.TryGetValue(draggedSlot.item.equipmentCategory, out InventorySlot correctSlot))
+                if (targetSlot == null)
+                {
+                    Debug.LogError("Target slot is null.");
+                    return;
+                }
+
+                // Check if target slot is an equipment slot
+                if (targetSlot.slotObject.GetComponent<InventorySlotUI>().isEquipmentSlot)
+                {
+                    Equipment equipment = GameObject.FindWithTag("Player").GetComponent<Equipment>();
+                    if (equipment != null)
+                    {
+                        InventorySlot correctSlot = equipment.GetTargetSlot(draggedSlot.item);
+                        if (draggedSlot.item.itemType == ItemType.Equipment &&
+                            correctSlot != null &&
+                            correctSlot.slotObject == targetSlot.slotObject)
                         {
-                            if (correctSlot.slotObject == targetSlot.slotObject)
-                            {
-                                Debug.Log($"Equipping item {draggedSlot.item.itemName} to {targetSlot.slotObject.name}");
-                                equipment.EquipItem(draggedSlot.item);
-                                draggedSlot.SetItem(null, 0);
-                            }
-                            else
-                            {
-                                Debug.LogError("Invalid equipment slot!");
-                                draggedHandler.rectTransform.anchoredPosition = draggedHandler.originalPosition; // Snap back to original position
-                                return;
-                            }
+                            equipment.EquipItem(draggedSlot.item);
+                            draggedSlot.SetItem(null, 0);
                         }
                         else
                         {
-                            Debug.LogError("Equipment slot not found or Equipment component is null.");
+                            Debug.LogError("Invalid equipment slot!");
                             draggedHandler.rectTransform.anchoredPosition = draggedHandler.originalPosition; // Snap back to original position
                             return;
                         }
                     }
                     else
                     {
-                        InventoryItem tempItem = draggedSlot.item;
-                        int tempQuantity = draggedSlot.quantity;
-
-                        draggedSlot.SetItem(targetSlot.item, targetSlot.quantity);
-                        targetSlot.SetItem(tempItem, tempQuantity);
-
-                        draggedHandler.rectTransform.anchoredPosition = Vector2.zero;
-                        rectTransform.anchoredPosition = Vector2.zero;
-
-                        draggedSlot.SetTransformProperties();
-                        targetSlot.SetTransformProperties();
-
-                        draggedHandler.canvasGroup.blocksRaycasts = true;
-                        canvasGroup.blocksRaycasts = true;
-
-                        draggedHandler.canvasGroup.alpha = 1f;
-                        canvasGroup.alpha = 1f;
-
-                        // Ensure the draggedHandler's dragItem is destroyed when the drop is completed
-                        if (draggedHandler.dragItem != null)
+                        Debug.LogError("Equipment component not found on the Player GameObject.");
+                    }
+                }
+                else
+                {
+                    // Handle unequipping logic if dragging from equipment slot to inventory slot
+                    if (draggedSlot.slotObject.GetComponent<InventorySlotUI>().isEquipmentSlot && !targetSlot.slotObject.GetComponent<InventorySlotUI>().isEquipmentSlot)
+                    {
+                        Equipment equipment = GameObject.FindWithTag("Player").GetComponent<Equipment>();
+                        if (equipment != null)
                         {
-                            Destroy(draggedHandler.dragItem);
-                            draggedHandler.dragItem = null;
+                            equipment.UnequipItem(draggedSlot.item);
                         }
                     }
+
+                    // Swap items between slots
+                    InventoryItem tempItem = targetSlot.item;
+                    int tempQuantity = targetSlot.quantity;
+
+                    if (draggedSlot.slotObject.GetComponent<InventorySlotUI>().isEquipmentSlot)
+                    {
+                        targetSlot.SetItem(tempItem, tempQuantity);
+                        draggedSlot.SetItem(null, 0);
+                    }
+                    else
+                    {
+                        targetSlot.SetItem(draggedSlot.item, draggedSlot.quantity);
+                        draggedSlot.SetItem(tempItem, tempQuantity);
+                    }
+                }
+
+                draggedHandler.rectTransform.anchoredPosition = Vector2.zero;
+                rectTransform.anchoredPosition = Vector2.zero;
+
+                draggedSlot.SetTransformProperties();
+                targetSlot.SetTransformProperties();
+
+                draggedHandler.canvasGroup.blocksRaycasts = true;
+                canvasGroup.blocksRaycasts = true;
+
+                draggedHandler.canvasGroup.alpha = 1f;
+                canvasGroup.alpha = 1f;
+
+                // Ensure the draggedHandler's dragItem is destroyed when the drop is completed
+                if (draggedHandler.dragItem != null)
+                {
+                    Destroy(draggedHandler.dragItem);
+                    draggedHandler.dragItem = null;
                 }
             }
         }
@@ -211,7 +241,9 @@ public class InventoryDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandl
     {
         if (dragItem != null)
         {
-            dragRectTransform.position = Input.mousePosition;
+            Vector2 position;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(dragCanvas.transform as RectTransform, Input.mousePosition, null, out position);
+            dragRectTransform.localPosition = position;
         }
     }
 }

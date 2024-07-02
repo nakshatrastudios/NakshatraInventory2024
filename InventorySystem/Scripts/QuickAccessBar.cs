@@ -8,9 +8,11 @@ public class QuickAccessBar : MonoBehaviour
     public GameObject slotPrefab;
     public Transform quickAccessGrid;
     public GameObject buttonNumberTextPrefab; // Assign a Text prefab with the necessary settings
+    public List<InventoryItem> allItemsList; // Add this to your script to hold all possible items
 
-    private List<InventorySlot> quickAccessSlots = new List<InventorySlot>();
+    public List<InventorySlot> quickAccessSlots = new List<InventorySlot>();
     private PlayerStatus playerStatus;
+    public ItemDB itemDB; // Reference to ItemDB
 
     private void Start()
     {
@@ -20,6 +22,17 @@ public class QuickAccessBar : MonoBehaviour
         {
             Debug.LogError("PlayerStatus component not found on the Player GameObject.");
         }
+
+        if (itemDB != null)
+        {
+            PopulateAllItemsList();
+        }
+
+    }
+
+    public void PopulateAllItemsList()
+    {
+        allItemsList = itemDB.items;
     }
 
     private void SetupQuickAccessBar()
@@ -55,7 +68,7 @@ public class QuickAccessBar : MonoBehaviour
                     rectTransform.anchorMin = new Vector2(0.5f, 0);
                     rectTransform.anchorMax = new Vector2(0.5f, 0);
                     rectTransform.pivot = new Vector2(0.5f, 1);
-                    rectTransform.anchoredPosition = new Vector2(0, -20); // Position below the slot
+                    rectTransform.anchoredPosition = new Vector2(0, 8); // Position below the slot
                 }
             }
             else
@@ -93,5 +106,62 @@ public class QuickAccessBar : MonoBehaviour
         {
             Debug.Log($"No item in slot {slotIndex} to use.");
         }
+    }
+
+    public void AddItemToQuickAccessBar(InventoryItem item, int quantity = 1)
+    {
+        foreach (var slot in quickAccessSlots)
+        {
+            if (slot.item == null)
+            {
+                slot.SetItem(item, quantity);
+                return;
+            }
+        }
+        Debug.LogWarning("Quick access bar is full!");
+    }
+
+    public List<InventoryItemData> GetItems()
+    {
+        List<InventoryItemData> items = new List<InventoryItemData>();
+        foreach (var slot in quickAccessSlots)
+        {
+            if (slot.item != null)
+            {
+                items.Add(new InventoryItemData { itemName = slot.item.itemName, quantity = slot.quantity });
+                Debug.Log($"Saved Quick Access Item: {slot.item.itemName} with Quantity: {slot.quantity}");
+            }
+        }
+        return items;
+    }
+
+    public void LoadItems(List<InventoryItemData> items)
+    {
+        foreach (var itemData in items)
+        {
+            InventoryItem item = FindItemByName(itemData.itemName);
+            if (item != null)
+            {
+                AddItemToQuickAccessBar(item, itemData.quantity);
+                Debug.Log($"Loaded Quick Access Item: {item.itemName} with Quantity: {itemData.quantity}");
+            }
+            else
+            {
+                Debug.LogWarning($"Item {itemData.itemName} not found in allItemsList.");
+            }
+        }
+    }
+
+    public void ClearItems()
+    {
+        foreach (var slot in quickAccessSlots)
+        {
+            slot.SetItem(null, 0);
+        }
+    }
+
+    private InventoryItem FindItemByName(string itemName)
+    {
+        return allItemsList.Find(item => item.itemName == itemName);
     }
 }
