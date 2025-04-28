@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccb635dae77f01847afdbd1771c0e55f, type: 3}
+  m_Name: TestItem
+  m_EditorClassIdentifier: 
+  itemName: TestItem
+  itemDescription: Item Description
+  itemIcon: {fileID: 21300000, guid: e7fbcad3f98cbc94c8fa1334ee6ecc2c, type: 3}
+  isStackable: 1
+  maxStackSize: 5
+  itemType: 0
+  equipmentCategory: 0
+  amount: 0
+  weaponType: 0
+  isMainHand: 0
+  isOffHand: 0
+  stats:
+  - statType: 0
+    value: 2
+  setBone: 0
+  selectedBoneNames: []
+  itemPrefabs: []
+  itemPositions: []
+  itemRotations: []
+  itemPickupPrefab: {fileID: 6736974427294284374, guid: 6f586ddb7332e774a8df889ecdaeee22, type: 3}
+  pickupTextPrefab: {fileID: 2901942414677796907, guid: 345ae6b88e51e4a4992b812e0add8e64, type: 3}
