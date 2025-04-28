@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccb635dae77f01847afdbd1771c0e55f, type: 3}
+  m_Name: Sword
+  m_EditorClassIdentifier: 
+  itemName: Sword
+  itemDescription: This is a test sword
+  itemIcon: {fileID: 21300000, guid: 900f7aec7c89b124690cb27ede023bbf, type: 3}
+  isStackable: 0
+  maxStackSize: 1
+  itemType: 1
+  equipmentCategory: 0
+  amount: 0
+  weaponType: 0
+  isMainHand: 1
+  isOffHand: 0
+  stats:
+  - statType: 0
+    value: 8
+  - statType: 10
+    value: 1
+  - statType: 12
+    value: 4
+  setBone: 1
+  selectedBoneNames:
+  - mixamorig:RightHand
+  itemPrefabs:
+  - {fileID: 7724877538079030634, guid: 65f45012e13c15e4da411ef6f9800f86, type: 3}
+  itemPositions:
+  - {x: 0.02, y: 0.091, z: 0.02}
+  itemRotations:
+  - {x: 0, y: 0, z: 90}
+  itemPickupPrefab: {fileID: 7724877538079030634, guid: 65f45012e13c15e4da411ef6f9800f86, type: 3}
+  pickupTextPrefab: {fileID: 2901942414677796907, guid: 345ae6b88e51e4a4992b812e0add8e64, type: 3}

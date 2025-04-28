@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccb635dae77f01847afdbd1771c0e55f, type: 3}
+  m_Name: Necklace
+  m_EditorClassIdentifier: 
+  itemName: Necklace
+  itemDescription: Item Description
+  itemIcon: {fileID: 21300000, guid: 40a11fb8deecc254b8b9757336234caf, type: 3}
+  isStackable: 0
+  maxStackSize: 1
+  itemType: 1
+  equipmentCategory: 8
+  amount: 0
+  weaponType: 0
+  isMainHand: 0
+  isOffHand: 0
+  stats:
+  - statType: 7
+    value: 15
+  - statType: 11
+    value: 6
+  - statType: 0
+    value: 1

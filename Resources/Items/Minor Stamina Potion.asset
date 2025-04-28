@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccb635dae77f01847afdbd1771c0e55f, type: 3}
+  m_Name: Minor Stamina Potion
+  m_EditorClassIdentifier: 
+  itemName: Minor Stamina Potion
+  itemDescription: Item Description
+  itemIcon: {fileID: 21300000, guid: 80ea741ad59d63f47b450b8dad271da0, type: 3}
+  isStackable: 1
+  maxStackSize: 5
+  itemType: 0
+  equipmentCategory: 0
+  amount: 0
+  weaponType: 0
+  isMainHand: 0
+  isOffHand: 0
+  stats:
+  - statType: 8
+    value: 7

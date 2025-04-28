@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccb635dae77f01847afdbd1771c0e55f, type: 3}
+  m_Name: Shield
+  m_EditorClassIdentifier: 
+  itemName: Shield
+  itemDescription: Item Description
+  itemIcon: {fileID: 21300000, guid: 7fb2440d4bef6264683f07a4d164c00c, type: 3}
+  isStackable: 0
+  maxStackSize: 1
+  itemType: 1
+  equipmentCategory: 0
+  amount: 0
+  weaponType: 0
+  isMainHand: 0
+  isOffHand: 1
+  stats:
+  - statType: 2
+    value: 10
+  - statType: 1
+    value: 15
+  - statType: 5
+    value: 20
+  - statType: 9
+    value: 9
+  setBone: 1
+  selectedBoneNames:
+  - mixamorig:LeftHand
+  itemPrefabs:
+  - {fileID: 4934585008809434301, guid: 38a76dc2f6c7a0a498a4d039b732cecd, type: 3}
+  itemPositions:
+  - {x: 0, y: -0.045, z: -0.045}
+  itemRotations:
+  - {x: 0, y: 186, z: 0}
+  itemPickupPrefab: {fileID: 4934585008809434301, guid: 38a76dc2f6c7a0a498a4d039b732cecd, type: 3}
+  pickupTextPrefab: {fileID: 2901942414677796907, guid: 345ae6b88e51e4a4992b812e0add8e64, type: 3}

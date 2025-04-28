@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccb635dae77f01847afdbd1771c0e55f, type: 3}
+  m_Name: Boots
+  m_EditorClassIdentifier: 
+  itemName: Boots
+  itemDescription: Item Description
+  itemIcon: {fileID: 21300000, guid: d8e740bc32b23224eb9e0edbe1b95513, type: 3}
+  isStackable: 0
+  maxStackSize: 1
+  itemType: 1
+  equipmentCategory: 5
+  amount: 0
+  weaponType: 0
+  isMainHand: 0
+  isOffHand: 0
+  stats:
+  - statType: 5
+    value: 25
+  - statType: 8
+    value: 8
+  - statType: 10
+    value: 2
+  - statType: 11
+    value: 6
+  setBone: 1
+  selectedBoneNames:
+  - mixamorig:LeftFoot
+  - mixamorig:RightFoot
+  itemPrefabs:
+  - {fileID: 7523022881414904933, guid: 1940779b6e1e872408b0dbc8ca89004d, type: 3}
+  - {fileID: 7523022881414904933, guid: 1940779b6e1e872408b0dbc8ca89004d, type: 3}
+  itemPositions:
+  - {x: 0.015, y: 0.04, z: -0.088}
+  - {x: 0.015, y: 0.04, z: -0.088}
+  itemRotations:
+  - {x: 244.5, y: 180, z: -0.5}
+  - {x: 244.5, y: 180, z: -0.5}
+  itemPickupPrefab: {fileID: 7523022881414904933, guid: 1940779b6e1e872408b0dbc8ca89004d, type: 3}
+  pickupTextPrefab: {fileID: 2901942414677796907, guid: 345ae6b88e51e4a4992b812e0add8e64, type: 3}
