@@ -11,13 +11,21 @@ public class SaveLoadManager : MonoBehaviour
         savePath = Application.persistentDataPath + "/game_save.json";
     }
 
-    public void SaveGame(Inventory inventory, Equipment equipment, QuickAccessBar quickAccessBar)
+    /// <summary>
+    /// Save inventory, equipment, quick‐access and currency data all at once.
+    /// </summary>
+    public void SaveGame(
+        Inventory inventory,
+        Equipment equipment,
+        QuickAccessBar quickAccessBar,
+        CurrencyManager currencyManager)
     {
-        GameSaveData saveData = new GameSaveData
+        var saveData = new GameSaveData
         {
-            inventoryItems = inventory.GetItems(),
-            equipmentItems = equipment.GetItems(),
-            quickAccessItems = quickAccessBar.GetItems()
+            inventoryItems   = inventory.GetItems(),
+            equipmentItems   = equipment.GetItems(),
+            quickAccessItems = quickAccessBar.GetItems(),
+            currencyAmounts  = currencyManager.GetCurrencyData()
         };
 
         string json = JsonUtility.ToJson(saveData, true);
@@ -25,7 +33,14 @@ public class SaveLoadManager : MonoBehaviour
         Debug.Log("Game saved to " + savePath);
     }
 
-    public void LoadGame(Inventory inventory, Equipment equipment, QuickAccessBar quickAccessBar)
+    /// <summary>
+    /// Load inventory, equipment, quick‐access and currency data from disk.
+    /// </summary>
+    public void LoadGame(
+        Inventory inventory,
+        Equipment equipment,
+        QuickAccessBar quickAccessBar,
+        CurrencyManager currencyManager)
     {
         if (!File.Exists(savePath))
         {
@@ -34,21 +49,23 @@ public class SaveLoadManager : MonoBehaviour
         }
 
         string json = File.ReadAllText(savePath);
-        GameSaveData saveData = JsonUtility.FromJson<GameSaveData>(json);
+        var saveData = JsonUtility.FromJson<GameSaveData>(json);
 
-        // Clear existing items before loading new ones
+        // Clear existing
         equipment.ClearItems();
         inventory.ClearItems();
         quickAccessBar.ClearItems();
 
-        // Update allItemsList from itemDB before loading items
+        // Rebuild lists from your ItemDB if needed
         inventory.PopulateAllItemsList();
         equipment.PopulateAllItemsList();
         quickAccessBar.PopulateAllItemsList();
 
+        // Load the items & currency
         inventory.LoadItems(saveData.inventoryItems);
         equipment.LoadItems(saveData.equipmentItems);
         quickAccessBar.LoadItems(saveData.quickAccessItems);
+        currencyManager.SetCurrencyData(saveData.currencyAmounts);
 
         Debug.Log("Game loaded from " + savePath);
     }
@@ -60,12 +77,14 @@ public class GameSaveData
     public List<InventoryItemData> inventoryItems;
     public List<InventoryItemData> equipmentItems;
     public List<InventoryItemData> quickAccessItems;
-}
 
+    // Reuses the CurrencyData you defined in CurrencyManager.cs
+    public List<CurrencyData> currencyAmounts;
+}
 
 [System.Serializable]
 public class InventoryItemData
 {
     public string itemName;
-    public int quantity;
+    public int    quantity;
 }
