@@ -2,6 +2,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Manages a list of currencies with multi-tier conversion and on-screen UI.
+/// </summary>
 public class CurrencyManager : MonoBehaviour
 {
     [System.Serializable]
@@ -14,79 +17,109 @@ public class CurrencyManager : MonoBehaviour
         public int conversionRate;
     }
 
+    [Tooltip("Define currencies in descending order (highest value first).")]
     public List<Currency> currencies = new List<Currency>();
 
     private void Start()
     {
+        // Initialize on-screen text
         foreach (var currency in currencies)
         {
             if (currency.currencyText != null)
-            {
                 currency.currencyText.text = currency.amount.ToString();
-            }
             else
-            {
                 Debug.LogError($"Currency text for '{currency.name}' is not assigned.");
-            }
         }
     }
 
+    /// <summary>
+    /// Add the specified amount to a currency, rolling over to higher tiers.
+    /// </summary>
     public void AddCurrency(string currencyName, int amount)
     {
-        Currency currency = currencies.Find(c => c.name == currencyName);
-        if (currency != null)
-        {
-            if (currency.conversionRate <= 0)
-            {
-                Debug.LogError($"Conversion rate for '{currency.name}' must be greater than 0.");
-                return;
-            }
-
-            // Calculate the new total amount including the newly added amount
-            int totalAmount = currency.amount + amount;
-
-            // Determine the amount that can be converted to the next higher currency
-            int convertedAmount = totalAmount / currency.conversionRate;
-
-            // Determine the remaining amount of the current currency
-            int remainder = totalAmount % currency.conversionRate;
-
-            // Update the current currency's amount
-            currency.amount = remainder;
-            Debug.Log($"{currency.name} updated amount: {currency.amount}");
-
-            // Update the currency text if assigned
-            UpdateCurrencyText(currency);
-
-            // If there is a converted amount and a higher tier currency exists, add the converted amount to the higher tier currency
-            int currentIndex = currencies.IndexOf(currency);
-            if (convertedAmount > 0 && currentIndex > 0)
-            {
-                Debug.Log($"Converted {amount} {currencyName} into {convertedAmount} {currencies[currentIndex - 1].name}");
-                AddCurrency(currencies[currentIndex - 1].name, convertedAmount);
-            }
-        }
-        else
+        var currency = currencies.Find(c => c.name == currencyName);
+        if (currency == null)
         {
             Debug.LogError($"Currency '{currencyName}' not found.");
+            return;
+        }
+
+        if (currency.conversionRate <= 0)
+        {
+            Debug.LogError($"Conversion rate for '{currency.name}' must be > 0.");
+            return;
+        }
+
+        // Combine and split into remainder + converted higher-tier units
+        int totalAmount     = currency.amount + amount;
+        int convertedAmount = totalAmount / currency.conversionRate;
+        int remainder       = totalAmount % currency.conversionRate;
+
+        currency.amount = remainder;
+        UpdateCurrencyText(currency);
+        Debug.Log($"{currency.name} updated to {currency.amount}");
+
+        // Roll over to next higher tier if any
+        int idx = currencies.IndexOf(currency);
+        if (convertedAmount > 0 && idx > 0)
+        {
+            var higher = currencies[idx - 1];
+            Debug.Log($"Rolling over {convertedAmount * currency.conversionRate} {currency.name} into {convertedAmount} {higher.name}");
+            AddCurrency(higher.name, convertedAmount);
         }
     }
 
+    /// <summary>
+    /// Returns the current amount of the specified currency.
+    /// </summary>
     public int GetCurrencyAmount(string currencyName)
     {
-        Currency currency = currencies.Find(c => c.name == currencyName);
+        var currency = currencies.Find(c => c.name == currencyName);
         return currency != null ? currency.amount : 0;
     }
 
     private void UpdateCurrencyText(Currency currency)
     {
         if (currency.currencyText != null)
-        {
             currency.currencyText.text = currency.amount.ToString();
-        }
         else
-        {
             Debug.LogError($"Currency text for '{currency.name}' is not assigned.");
+    }
+
+    /// <summary>
+    /// Returns a serializable snapshot of all currency amounts.
+    /// </summary>
+    public List<CurrencyData> GetCurrencyData()
+    {
+        var list = new List<CurrencyData>();
+        foreach (var c in currencies)
+            list.Add(new CurrencyData { name = c.name, amount = c.amount });
+        return list;
+    }
+
+    /// <summary>
+    /// Restores currency amounts from saved data and updates the UI.
+    /// </summary>
+    public void SetCurrencyData(List<CurrencyData> data)
+    {
+        foreach (var d in data)
+        {
+            var c = currencies.Find(x => x.name == d.name);
+            if (c != null)
+            {
+                c.amount = d.amount;
+                UpdateCurrencyText(c);
+            }
         }
     }
+}
+
+/// <summary>
+/// Serializable structure representing a single currency's name & amount for saving/loading.
+/// </summary>
+[System.Serializable]
+public class CurrencyData
+{
+    public string name;
+    public int    amount;
 }
