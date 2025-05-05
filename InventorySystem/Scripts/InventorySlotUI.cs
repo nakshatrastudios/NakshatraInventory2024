@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -19,16 +20,19 @@ namespace Nakshatra.InventorySystem
 
         private void Awake()
         {
+            // Cache slot visuals
             slot.slotObject = gameObject;
             slot.stackText = transform.Find("DraggableItem/StackText")?.GetComponent<Text>();
-            slot.itemIcon = transform.Find("DraggableItem/ItemIcon")?.GetComponent<Image>();
+            slot.itemIcon  = transform.Find("DraggableItem/ItemIcon")?.GetComponent<Image>();
 
             parentCanvas = GetComponentInParent<Canvas>();
             if (parentCanvas == null)
                 Debug.LogError("Parent canvas not found.");
 
-            // Cache the instantiated DescriptionPanel if it exists
-            _descPanel = FindObjectOfType<ItemDescriptionPanel>();
+            // Try to find the DescriptionPanel even if it's inactive
+            var panels = Resources.FindObjectsOfTypeAll<ItemDescriptionPanel>();
+            if (panels != null && panels.Length > 0)
+                _descPanel = panels.First();
 
             if (slot.stackText == null)
                 Debug.LogError($"StackText not found in DraggableItem for slot: {gameObject.name}");
@@ -38,16 +42,16 @@ namespace Nakshatra.InventorySystem
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            Debug.Log($"Slot clicked: {gameObject.name}, Button: {eventData.button}, Item: {(slot.item != null ? slot.item.itemName : "None")}");
+            Debug.Log($"Slot clicked: {gameObject.name}, Button: {eventData.button}, Item: {(slot.item != null ? slot.item.itemName : "None")}" );
 
-            // Close existing action UI
+            // Close any existing action UI
             if (currentItemActionUI != null)
             {
                 Destroy(currentItemActionUI);
                 currentItemActionUI = null;
             }
 
-            // Handle left-click and right-click actions
+            // Handle left/right clicks
             if (eventData.button == PointerEventData.InputButton.Left)
             {
                 if (Time.time - lastClickTime < doubleClickThreshold)
@@ -56,14 +60,17 @@ namespace Nakshatra.InventorySystem
             }
             else if (eventData.button == PointerEventData.InputButton.Right && slot.item != null)
             {
-                Debug.Log($"Right-clicked on item: {slot.item.itemName}");
                 ShowItemActionUI(slot.item);
             }
 
-            // Show or hide description panel based on clicked item
+            // Show or hide description panel
             InventoryItem clickedItem = slot.item;
             if (_descPanel == null)
-                _descPanel = FindObjectOfType<ItemDescriptionPanel>();
+            {
+                var panels = Resources.FindObjectsOfTypeAll<ItemDescriptionPanel>();
+                if (panels != null && panels.Length > 0)
+                    _descPanel = panels.First();
+            }
 
             if (_descPanel != null)
             {
@@ -96,12 +103,9 @@ namespace Nakshatra.InventorySystem
         private void ShowItemActionUI(InventoryItem item)
         {
             if (currentItemActionUI != null)
-            {
                 Destroy(currentItemActionUI);
-            }
 
             currentItemActionUI = Instantiate(itemActionPrefab, parentCanvas.transform);
-
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 parentCanvas.transform as RectTransform,
                 Input.mousePosition,
@@ -112,10 +116,10 @@ namespace Nakshatra.InventorySystem
             rectTransform.anchoredPosition = anchoredPosition;
             rectTransform.sizeDelta = new Vector2(100, 100);
 
-            ItemActionUI itemActionUI = currentItemActionUI.GetComponent<ItemActionUI>();
+            var itemActionUI = currentItemActionUI.GetComponent<ItemActionUI>();
             if (itemActionUI != null)
             {
-                Equipment playerEquipment = GameObject.FindWithTag("Player")?.GetComponent<Equipment>();
+                var playerEquipment = GameObject.FindWithTag("Player")?.GetComponent<Equipment>();
                 itemActionUI.ConfigureButtons(item, this, playerEquipment);
             }
         }

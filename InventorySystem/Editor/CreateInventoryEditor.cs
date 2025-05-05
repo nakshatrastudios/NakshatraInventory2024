@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Nakshatra.InventorySystem.Editor
 {
-    public class CreateInventoryEditor : InventoryManagerBaseEditor
+    public class CreateInventoryEditor : EditorWindow
     {
         private int numSlots;
         private int slotsPerRow;
@@ -28,7 +28,15 @@ namespace Nakshatra.InventorySystem.Editor
         private List<Currency> currencies = new List<Currency>();
         private Dictionary<string, int> currencyAmounts = new Dictionary<string, int>();
 
-        public void DrawCreateInventory()
+        [MenuItem("Inventory System/Create Inventory")]
+        public static void ShowWindow()
+        {
+            // This will open (or focus) the window, and title it “Create Inventory”
+            var window = GetWindow<CreateInventoryEditor>(false, "Create Inventory", true);
+            window.Show();
+        }
+
+        public void OnGUI()
         {
             GUILayout.Label("Inventory Settings", EditorStyles.boldLabel);
             numSlots = EditorGUILayout.IntField("Number of Slots", numSlots);

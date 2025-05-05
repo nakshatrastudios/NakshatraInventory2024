@@ -64,7 +64,7 @@ namespace Nakshatra.InventorySystem.Editor
             switch (currentTab)
             {
                 case Tab.CreateInventory:
-                    createInventoryEditor.DrawCreateInventory();
+                    createInventoryEditor.OnGUI();
                     break;
                 case Tab.CreateItem:
                     createItemEditor.DrawCreateAndSetupItem();
