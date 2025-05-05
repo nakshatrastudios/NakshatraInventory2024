@@ -34,33 +34,33 @@ namespace Nakshatra.InventorySystem
             gameObject.SetActive(true);
 
             // Icon
-            if (iconImage != null && item.Icon != null)
-                iconImage.sprite = item.Icon;
+            if (iconImage != null && item.itemIcon != null)
+                iconImage.sprite = item.itemIcon;
 
             // Name
             if (nameText != null)
-                nameText.text = item.ItemName;  // adjust to your InventoryItem property
+                nameText.text = item.itemName;
 
             // Description
             if (descriptionText != null)
-                descriptionText.text = item.Description;  // adjust to your InventoryItem property
+                descriptionText.text = item.itemDescription;
 
             // Optional: Populate stats
-            if (statsContainer != null && statLinePrefab != null && item.Stats != null)
+            if (statsContainer != null && statLinePrefab != null && item.stats != null)
             {
                 // Clear previous
                 foreach (Transform child in statsContainer)
                     Destroy(child.gameObject);
 
                 // Create new stat lines
-                foreach (var kv in item.Stats)
+                foreach (var stat in item.stats)
                 {
                     var line = Instantiate(statLinePrefab, statsContainer);
                     var texts = line.GetComponentsInChildren<Text>();
                     if (texts.Length >= 2)
                     {
-                        texts[0].text = kv.Key;
-                        texts[1].text = kv.Value.ToString();
+                        texts[0].text = stat.statType.ToString();
+                        texts[1].text = stat.value.ToString();
                     }
                 }
             }

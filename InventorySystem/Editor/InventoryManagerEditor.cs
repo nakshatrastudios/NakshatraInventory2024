@@ -33,9 +33,8 @@ namespace Nakshatra.InventorySystem.Editor
         // Field for the Item Database ScriptableObject
         private ItemDB itemDB;
 
-        private Sprite descriptionPanelBackground;
-        private float descriptionPanelWidth  = 200f;
-        private float descriptionPanelHeight = 150f;
+        // Prefab field for your pre-configured panel
+        private GameObject descriptionPanelPrefab;
 
         [MenuItem("Inventory System/Inventory Manager")]
         public static void ShowWindow()
@@ -137,30 +136,12 @@ namespace Nakshatra.InventorySystem.Editor
         {
             GUILayout.Label("Description Panel Setup", EditorStyles.boldLabel);
 
-            descriptionPanelBackground =
-                (Sprite)EditorGUILayout.ObjectField(
-                    "Background Sprite",
-                    descriptionPanelBackground,
-                    typeof(Sprite),
-                    allowSceneObjects: false);
+            descriptionPanelPrefab =
+                (GameObject)EditorGUILayout.ObjectField("Description Panel Prefab", descriptionPanelPrefab, typeof(GameObject), false);
 
-            descriptionPanelWidth =
-                EditorGUILayout.FloatField("Width", descriptionPanelWidth);
-
-            descriptionPanelHeight =
-                EditorGUILayout.FloatField("Height", descriptionPanelHeight);
-
-            EditorGUILayout.Space();
-
-            // Disable button if inputs invalid
-            EditorGUI.BeginDisabledGroup(
-                descriptionPanelBackground == null
-                || descriptionPanelWidth  <= 0
-                || descriptionPanelHeight <= 0);
-
+            EditorGUI.BeginDisabledGroup(descriptionPanelPrefab == null);
             if (GUILayout.Button("Create Description Panel"))
                 InstantiateDescriptionPanel();
-
             EditorGUI.EndDisabledGroup();
         }
 
@@ -170,44 +151,34 @@ namespace Nakshatra.InventorySystem.Editor
 
         private void InstantiateDescriptionPanel()
         {
-            // 1. Find the Canvas in the scene
+            // 1. Ensure a Canvas exists
             var canvas = GameObject.FindObjectOfType<Canvas>();
             if (canvas == null)
             {
-                Debug.LogError("No Canvas found in scene. Please create one first.");
+                Debug.LogError("No Canvas found in scene. Please add one first.");
                 return;
             }
 
-            // 2. Create the panel GameObject
-            var panelGO = new GameObject("DescriptionPanel",
-                typeof(RectTransform),
-                typeof(CanvasRenderer),
-                typeof(UnityEngine.UI.Image),
-                typeof(Nakshatra.InventorySystem.ItemDescriptionPanel));
+            // 2. Instantiate the prefab under the Canvas (use canvas.gameObject.scene)
+            var instance = (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(
+                descriptionPanelPrefab,
+                canvas.gameObject.scene);
 
-            Undo.RegisterCreatedObjectUndo(panelGO, "Create Description Panel");
+            Undo.RegisterCreatedObjectUndo(instance, "Create Description Panel");
+            instance.transform.SetParent(canvas.transform, worldPositionStays: false);
 
-            // 3. Parent it under the Canvas
-            panelGO.transform.SetParent(canvas.transform, false);
+            // 3. (Re-)name & hide
+            instance.name = "DescriptionPanel";
+            instance.SetActive(false);
 
-            // 4. Configure the Image component
-            var img = panelGO.GetComponent<UnityEngine.UI.Image>();
-            img.sprite = descriptionPanelBackground;
-            img.type   = UnityEngine.UI.Image.Type.Sliced; 
+            // 4. Mark scene dirty & select (again use canvas.gameObject.scene)
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(canvas.gameObject.scene);
+            UnityEditor.Selection.activeGameObject = instance;
 
-            // 5. Set its size
-            var rt = panelGO.GetComponent<RectTransform>();
-            rt.sizeDelta = new Vector2(descriptionPanelWidth, descriptionPanelHeight);
-
-            // 6. Start hidden
-            panelGO.SetActive(false);
-
-            // 7. Mark the scene dirty and select it
-            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(panelGO.scene);
-            Selection.activeGameObject = panelGO;
-
-            Debug.Log("Description Panel created (hidden). It will be shown when you click an item slot.");
+            Debug.Log("Description Panel instantiated from prefab (hidden by default).");
         }
+
+
 
 
 
