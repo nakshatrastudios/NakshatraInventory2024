@@ -32,7 +32,7 @@ namespace Nakshatra.InventorySystem.Editor
         // Field for the Item Database ScriptableObject
         private ItemDB itemDB;
 
-        [MenuItem("Window/Inventory System/Inventory Manager")]
+        [MenuItem("Inventory System/Inventory Manager")]
         public static void ShowWindow()
         {
             GetWindow<InventoryManagerEditor>("Inventory System");
