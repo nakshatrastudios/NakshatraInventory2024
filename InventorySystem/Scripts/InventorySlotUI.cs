@@ -66,6 +66,20 @@ namespace Nakshatra.InventorySystem
             }
         }
 
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            var panel = FindObjectOfType<ItemDescriptionPanel>();
+            if (panel != null)
+                panel.Show(slot.item);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            var panel = FindObjectOfType<ItemDescriptionPanel>();
+            if (panel != null)
+                panel.Hide();
+        }
+
         private void HandleDoubleClick()
         {
             if (slot != null && slot.item != null)

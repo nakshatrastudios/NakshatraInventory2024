@@ -28,6 +28,11 @@ namespace Nakshatra.InventorySystem.Editor
         private List<Currency> currencies = new List<Currency>();
         private Dictionary<string, int> currencyAmounts = new Dictionary<string, int>();
 
+        // inside class CreateInventoryEditor :
+        private Sprite   descriptionPanelBackground;
+        private Vector2 descriptionPanelSize = new Vector2(200, 300);
+
+
         public void DrawCreateInventory()
         {
             GUILayout.Label("Inventory Settings", EditorStyles.boldLabel);
@@ -78,6 +83,22 @@ namespace Nakshatra.InventorySystem.Editor
                 }
                 GUILayout.EndHorizontal();
             }
+
+            GUILayout.Space(10);
+            GUILayout.Label("Description Panel", EditorStyles.boldLabel);
+            // pick the background sprite
+            descriptionPanelBackground = (Sprite)EditorGUILayout.ObjectField(
+                "Panel Background",
+                descriptionPanelBackground,
+                typeof(Sprite),
+                false
+            );
+            // size in pixels
+            descriptionPanelSize = EditorGUILayout.Vector2Field(
+                "Panel Size (px)",
+                descriptionPanelSize
+            );
+
 
             if (GUILayout.Button("Create Inventory"))
             {
@@ -304,6 +325,38 @@ namespace Nakshatra.InventorySystem.Editor
                     currencyManagerCurrency.currencyText = currencyText;
                 }
             }
+
+            // ─── Description Panel ─────────────────────────────────────────────
+            if (descriptionPanelBackground != null)
+            {
+                // 1) Create under your Inventory Canvas
+                var descGO = new GameObject(
+                    "DescriptionPanel",
+                    typeof(RectTransform),
+                    typeof(CanvasGroup),
+                    typeof(Image)
+                );
+                descGO.transform.SetParent(canvasObject.transform, false);
+
+                // 2) Position to the right of the inventory
+                var rt = descGO.GetComponent<RectTransform>();
+                rt.anchorMin        = new Vector2(1, 1);
+                rt.anchorMax        = new Vector2(1, 1);
+                rt.pivot            = new Vector2(0, 1);
+                rt.sizeDelta        = descriptionPanelSize;
+                rt.anchoredPosition = new Vector2(10, 0);  // 10px margin
+
+                // 3) Style the panel
+                var img = descGO.GetComponent<Image>();
+                img.sprite = descriptionPanelBackground;
+                img.type   = Image.Type.Sliced;
+                img.color  = new Color(1, 1, 1, 0.9f);
+
+                // 4) Attach your tooltip behaviour
+                var tooltip = descGO.AddComponent<ItemDescriptionPanel>();
+                tooltip.Initialize();  // make sure you’ve implemented this
+            }  
+
 
             Debug.Log("Inventory, HUD, and Currency system created successfully.");
         }
