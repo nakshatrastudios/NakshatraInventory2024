@@ -17,7 +17,8 @@ namespace Nakshatra.InventorySystem.Editor
             CreateItem,
             CreateQuickAccessBar,
             ItemDatabase,
-            CreateEquipmentPanel
+            CreateEquipmentPanel,
+            CreateDescriptionPanel
         }
 
         private Tab currentTab = Tab.CreateInventory;
@@ -31,6 +32,10 @@ namespace Nakshatra.InventorySystem.Editor
         private GameObject equipmentPanelPrefab;
         // Field for the Item Database ScriptableObject
         private ItemDB itemDB;
+
+        private Sprite descriptionPanelBackground;
+        private float descriptionPanelWidth  = 200f;
+        private float descriptionPanelHeight = 150f;
 
         [MenuItem("Inventory System/Inventory Manager")]
         public static void ShowWindow()
@@ -74,6 +79,9 @@ namespace Nakshatra.InventorySystem.Editor
                 case Tab.CreateEquipmentPanel:
                     DrawCreateEquipmentPanel();
                     break;
+                case Tab.CreateDescriptionPanel:
+                    DrawCreateDescriptionPanel();
+                    break;
             }
 
             EditorGUILayout.EndVertical();
@@ -94,6 +102,7 @@ namespace Nakshatra.InventorySystem.Editor
             if (GUILayout.Button("Create Quick Access Bar")) currentTab = Tab.CreateQuickAccessBar;
             if (GUILayout.Button("Item Database")) currentTab = Tab.ItemDatabase;
             if (GUILayout.Button("Create Equipment Panel")) currentTab = Tab.CreateEquipmentPanel;
+            if (GUILayout.Button("Create Description Panel")) currentTab = Tab.CreateDescriptionPanel;
 
             EditorGUILayout.EndVertical();
         }
@@ -123,6 +132,84 @@ namespace Nakshatra.InventorySystem.Editor
             }
             EditorGUI.EndDisabledGroup();
         }
+
+        private void DrawCreateDescriptionPanel()
+        {
+            GUILayout.Label("Description Panel Setup", EditorStyles.boldLabel);
+
+            descriptionPanelBackground =
+                (Sprite)EditorGUILayout.ObjectField(
+                    "Background Sprite",
+                    descriptionPanelBackground,
+                    typeof(Sprite),
+                    allowSceneObjects: false);
+
+            descriptionPanelWidth =
+                EditorGUILayout.FloatField("Width", descriptionPanelWidth);
+
+            descriptionPanelHeight =
+                EditorGUILayout.FloatField("Height", descriptionPanelHeight);
+
+            EditorGUILayout.Space();
+
+            // Disable button if inputs invalid
+            EditorGUI.BeginDisabledGroup(
+                descriptionPanelBackground == null
+                || descriptionPanelWidth  <= 0
+                || descriptionPanelHeight <= 0);
+
+            if (GUILayout.Button("Create Description Panel"))
+                InstantiateDescriptionPanel();
+
+            EditorGUI.EndDisabledGroup();
+        }
+
+        /// <summary>
+        /// Instantiates the Description Panel.
+        /// </summary>
+
+        private void InstantiateDescriptionPanel()
+        {
+            // 1. Find the Canvas in the scene
+            var canvas = GameObject.FindObjectOfType<Canvas>();
+            if (canvas == null)
+            {
+                Debug.LogError("No Canvas found in scene. Please create one first.");
+                return;
+            }
+
+            // 2. Create the panel GameObject
+            var panelGO = new GameObject("DescriptionPanel",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(UnityEngine.UI.Image),
+                typeof(Nakshatra.InventorySystem.ItemDescriptionPanel));
+
+            Undo.RegisterCreatedObjectUndo(panelGO, "Create Description Panel");
+
+            // 3. Parent it under the Canvas
+            panelGO.transform.SetParent(canvas.transform, false);
+
+            // 4. Configure the Image component
+            var img = panelGO.GetComponent<UnityEngine.UI.Image>();
+            img.sprite = descriptionPanelBackground;
+            img.type   = UnityEngine.UI.Image.Type.Sliced; 
+
+            // 5. Set its size
+            var rt = panelGO.GetComponent<RectTransform>();
+            rt.sizeDelta = new Vector2(descriptionPanelWidth, descriptionPanelHeight);
+
+            // 6. Start hidden
+            panelGO.SetActive(false);
+
+            // 7. Mark the scene dirty and select it
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(panelGO.scene);
+            Selection.activeGameObject = panelGO;
+
+            Debug.Log("Description Panel created (hidden). It will be shown when you click an item slot.");
+        }
+
+
 
         /// <summary>
         /// Instantiates the Equipment Panel prefab and populates the Player's Equipment component.
