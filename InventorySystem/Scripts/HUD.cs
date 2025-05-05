@@ -1,63 +1,67 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class HUD : MonoBehaviour
+namespace Nakshatra.InventorySystem
 {
-    public Image healthBarFill;
-    public Image manaBarFill;
-    public Image staminaBarFill;
-
-    private PlayerStatus playerStatus;
-
-    void Start()
+    public class HUD : MonoBehaviour
     {
-        GameObject player = GameObject.FindWithTag("Player");
-        if (player != null)
+        public Image healthBarFill;
+        public Image manaBarFill;
+        public Image staminaBarFill;
+
+        private PlayerStatus playerStatus;
+
+        void Start()
         {
-            playerStatus = player.GetComponent<PlayerStatus>();
-            if (playerStatus == null)
+            GameObject player = GameObject.FindWithTag("Player");
+            if (player != null)
             {
-                Debug.LogError("PlayerStatus component not found on player.");
+                playerStatus = player.GetComponent<PlayerStatus>();
+                if (playerStatus == null)
+                {
+                    Debug.LogError("PlayerStatus component not found on player.");
+                }
+            }
+            else
+            {
+                Debug.LogError("Player GameObject with tag 'Player' not found.");
+            }
+
+            UpdateHealthBar();
+            UpdateManaBar();
+            UpdateStaminaBar();
+        }
+
+        void Update()
+        {
+            UpdateHealthBar();
+            UpdateManaBar();
+            UpdateStaminaBar();
+        }
+
+        public void UpdateHealthBar()
+        {
+            if (playerStatus != null && healthBarFill != null)
+            {
+                healthBarFill.fillAmount = (float)playerStatus.Health / playerStatus.MaxHealth;
             }
         }
-        else
+
+        public void UpdateManaBar()
         {
-            Debug.LogError("Player GameObject with tag 'Player' not found.");
+            if (playerStatus != null && manaBarFill != null)
+            {
+                manaBarFill.fillAmount = (float)playerStatus.Mana / playerStatus.MaxMana;
+            }
         }
 
-        UpdateHealthBar();
-        UpdateManaBar();
-        UpdateStaminaBar();
-    }
-
-    void Update()
-    {
-        UpdateHealthBar();
-        UpdateManaBar();
-        UpdateStaminaBar();
-    }
-
-    public void UpdateHealthBar()
-    {
-        if (playerStatus != null && healthBarFill != null)
+        public void UpdateStaminaBar()
         {
-            healthBarFill.fillAmount = (float)playerStatus.Health / playerStatus.MaxHealth;
+            if (playerStatus != null && staminaBarFill != null)
+            {
+                staminaBarFill.fillAmount = (float)playerStatus.Stamina / playerStatus.MaxStamina;
+            }
         }
     }
 
-    public void UpdateManaBar()
-    {
-        if (playerStatus != null && manaBarFill != null)
-        {
-            manaBarFill.fillAmount = (float)playerStatus.Mana / playerStatus.MaxMana;
-        }
-    }
-
-    public void UpdateStaminaBar()
-    {
-        if (playerStatus != null && staminaBarFill != null)
-        {
-            staminaBarFill.fillAmount = (float)playerStatus.Stamina / playerStatus.MaxStamina;
-        }
-    }
 }
