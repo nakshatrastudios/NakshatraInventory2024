@@ -2,28 +2,32 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public static class EditorUtilities
+namespace Nakshatra.InventorySystem
 {
-    public static void EnsureEventSystem()
+    public static class EditorUtilities
     {
-        if (Object.FindObjectOfType<EventSystem>() == null)
+        public static void EnsureEventSystem()
         {
-            GameObject eventSystem = new GameObject("EventSystem");
-            eventSystem.AddComponent<EventSystem>();
-            eventSystem.AddComponent<StandaloneInputModule>();
+            if (Object.FindObjectOfType<EventSystem>() == null)
+            {
+                GameObject eventSystem = new GameObject("EventSystem");
+                eventSystem.AddComponent<EventSystem>();
+                eventSystem.AddComponent<StandaloneInputModule>();
+            }
+        }
+
+        public static GameObject CreateCanvas(string name)
+        {
+            GameObject canvasObject = new GameObject(name);
+            Canvas canvas = canvasObject.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            CanvasScaler canvasScaler = canvasObject.AddComponent<CanvasScaler>();
+            canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            canvasScaler.referenceResolution = new Vector2(1920, 1080);
+            canvasObject.AddComponent<GraphicRaycaster>();
+
+            return canvasObject;
         }
     }
-
-    public static GameObject CreateCanvas(string name)
-    {
-        GameObject canvasObject = new GameObject(name);
-        Canvas canvas = canvasObject.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        CanvasScaler canvasScaler = canvasObject.AddComponent<CanvasScaler>();
-        canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        canvasScaler.referenceResolution = new Vector2(1920, 1080);
-        canvasObject.AddComponent<GraphicRaycaster>();
-
-        return canvasObject;
-    }
 }
+

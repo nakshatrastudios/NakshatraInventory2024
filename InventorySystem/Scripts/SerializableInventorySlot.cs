@@ -1,8 +1,11 @@
 using System;
 
-[Serializable]
-public class SerializableInventorySlot
+namespace Nakshatra.InventorySystem
 {
-    public string itemName;
-    public int quantity;
+    [Serializable]
+    public class SerializableInventorySlot
+    {
+        public string itemName;
+        public int quantity;
+    }
 }

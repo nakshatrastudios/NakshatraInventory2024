@@ -1,57 +1,60 @@
 using UnityEditor;
 using UnityEngine;
 
-public class ItemDatabaseEditor : InventoryManagerBaseEditor
+namespace Nakshatra.InventorySystem.Editor
 {
-    private ItemDB itemDB;
-    private Vector2 itemScrollPos;
-
-    public void DrawItemDatabase()
+    public class ItemDatabaseEditor : InventoryManagerBaseEditor
     {
-        GUILayout.Label("Item Database", EditorStyles.boldLabel);
-        itemDB = (ItemDB)EditorGUILayout.ObjectField("Item Database", itemDB, typeof(ItemDB), false);
+        private ItemDB itemDB;
+        private Vector2 itemScrollPos;
 
-        if (itemDB == null)
+        public void DrawItemDatabase()
         {
-            EditorGUILayout.HelpBox("Please assign an ItemDB ScriptableObject.", MessageType.Warning);
-            return;
+            GUILayout.Label("Item Database", EditorStyles.boldLabel);
+            itemDB = (ItemDB)EditorGUILayout.ObjectField("Item Database", itemDB, typeof(ItemDB), false);
+
+            if (itemDB == null)
+            {
+                EditorGUILayout.HelpBox("Please assign an ItemDB ScriptableObject.", MessageType.Warning);
+                return;
+            }
+
+            if (GUILayout.Button("Load Items to Database"))
+            {
+                LoadItemsToDatabase();
+            }
+
+            GUILayout.Label("Items in Database:", EditorStyles.boldLabel);
+            itemScrollPos = EditorGUILayout.BeginScrollView(itemScrollPos, GUILayout.Height(400));
+            foreach (var item in itemDB.items)
+            {
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Label(item.itemName);
+                EditorGUILayout.ObjectField(item.itemIcon, typeof(Sprite), false, GUILayout.Width(50), GUILayout.Height(50));
+                EditorGUILayout.EndHorizontal();
+            }
+            EditorGUILayout.EndScrollView();
         }
 
-        if (GUILayout.Button("Load Items to Database"))
+        private void LoadItemsToDatabase()
         {
-            LoadItemsToDatabase();
+            if (itemDB == null)
+            {
+                Debug.LogError("ItemDB is not assigned.");
+                return;
+            }
+
+            itemDB.items.Clear();
+            InventoryItem[] allItems = Resources.LoadAll<InventoryItem>("");
+
+            foreach (InventoryItem item in allItems)
+            {
+                itemDB.items.Add(item);
+                Debug.Log("Added item to ItemDB: " + item.itemName);
+            }
+
+            EditorUtility.SetDirty(itemDB); // Mark the scriptable object as dirty to save changes
+            Debug.Log("ItemDB loaded with all items.");
         }
-
-        GUILayout.Label("Items in Database:", EditorStyles.boldLabel);
-        itemScrollPos = EditorGUILayout.BeginScrollView(itemScrollPos, GUILayout.Height(400));
-        foreach (var item in itemDB.items)
-        {
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Label(item.itemName);
-            EditorGUILayout.ObjectField(item.itemIcon, typeof(Sprite), false, GUILayout.Width(50), GUILayout.Height(50));
-            EditorGUILayout.EndHorizontal();
-        }
-        EditorGUILayout.EndScrollView();
-    }
-
-    private void LoadItemsToDatabase()
-    {
-        if (itemDB == null)
-        {
-            Debug.LogError("ItemDB is not assigned.");
-            return;
-        }
-
-        itemDB.items.Clear();
-        InventoryItem[] allItems = Resources.LoadAll<InventoryItem>("");
-
-        foreach (InventoryItem item in allItems)
-        {
-            itemDB.items.Add(item);
-            Debug.Log("Added item to ItemDB: " + item.itemName);
-        }
-
-        EditorUtility.SetDirty(itemDB); // Mark the scriptable object as dirty to save changes
-        Debug.Log("ItemDB loaded with all items.");
     }
 }
