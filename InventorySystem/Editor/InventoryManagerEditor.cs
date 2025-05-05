@@ -67,13 +67,13 @@ namespace Nakshatra.InventorySystem.Editor
                     createInventoryEditor.OnGUI();
                     break;
                 case Tab.CreateItem:
-                    createItemEditor.DrawCreateAndSetupItem();
+                    createItemEditor.OnGUI();
                     break;
                 case Tab.CreateQuickAccessBar:
-                    createQuickAccessBarEditor.DrawCreateQuickAccessBar();
+                    createQuickAccessBarEditor.OnGUI();
                     break;
                 case Tab.ItemDatabase:
-                    itemDatabaseEditor.DrawItemDatabase();
+                    itemDatabaseEditor.OnGUI();
                     break;
                 case Tab.CreateEquipmentPanel:
                     DrawCreateEquipmentPanel();

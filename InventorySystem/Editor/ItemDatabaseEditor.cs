@@ -3,12 +3,20 @@ using UnityEngine;
 
 namespace Nakshatra.InventorySystem.Editor
 {
-    public class ItemDatabaseEditor : InventoryManagerBaseEditor
+    public class ItemDatabaseEditor : EditorWindow
     {
         private ItemDB itemDB;
         private Vector2 itemScrollPos;
 
-        public void DrawItemDatabase()
+        [MenuItem("Inventory System/Create Item Database")]
+        public static void ShowWindow()
+        {
+            var wnd = GetWindow<CreateItemEditor>(false, "Item DB", true);
+            wnd.minSize = new Vector2(300, 400);
+            wnd.Show();
+        }
+
+        public void OnGUI()
         {
             GUILayout.Label("Item Database", EditorStyles.boldLabel);
             itemDB = (ItemDB)EditorGUILayout.ObjectField("Item Database", itemDB, typeof(ItemDB), false);

@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace Nakshatra.InventorySystem.Editor
 {
-    public class CreateQuickAccessBarEditor : InventoryManagerBaseEditor
+    public class CreateQuickAccessBarEditor : EditorWindow
     {
         private int quickAccessSlots;
         private Sprite quickAccessBackgroundSprite;
@@ -18,7 +18,15 @@ namespace Nakshatra.InventorySystem.Editor
         private Vector2 quickAccessCellSize;
         private float quickAccessBackgroundPaddingPercentage = 17f;
 
-        public void DrawCreateQuickAccessBar()
+        [MenuItem("Inventory System/Create Quick Access Bar")]
+        public static void ShowWindow()
+        {
+            var wnd = GetWindow<CreateItemEditor>(false, "Create Quick Access Bar", true);
+            wnd.minSize = new Vector2(300, 400);
+            wnd.Show();
+        }
+
+        public void OnGUI()
         {
             GUILayout.Label("Quick Access Bar Settings", EditorStyles.boldLabel);
             quickAccessSlots = EditorGUILayout.IntField("Number of Slots", quickAccessSlots);

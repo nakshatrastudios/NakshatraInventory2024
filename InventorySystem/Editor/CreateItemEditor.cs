@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Nakshatra.InventorySystem.Editor
 {
-    public class CreateItemEditor : InventoryManagerBaseEditor
+    public class CreateItemEditor : EditorWindow
     {
         private string itemName = "New Item";
         private string itemDescription = "Item Description";
@@ -44,7 +44,15 @@ namespace Nakshatra.InventorySystem.Editor
             }
         }
 
-        public void DrawCreateAndSetupItem()
+        [MenuItem("Inventory System/Create Item")]
+        public static void ShowWindow()
+        {
+            var wnd = GetWindow<CreateItemEditor>(false, "Create Item", true);
+            wnd.minSize = new Vector2(300, 400);
+            wnd.Show();
+        }
+
+        public void OnGUI()
         {
             GUILayout.Label("Item Settings", EditorStyles.boldLabel);
 
