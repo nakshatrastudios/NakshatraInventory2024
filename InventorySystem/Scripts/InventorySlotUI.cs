@@ -15,44 +15,43 @@ namespace Nakshatra.InventorySystem
         private float lastClickTime;
         private const float doubleClickThreshold = 0.3f; // Adjust as needed
 
+        private ItemDescriptionPanel _descPanel;
+
         private void Awake()
         {
             slot.slotObject = gameObject;
             slot.stackText = transform.Find("DraggableItem/StackText")?.GetComponent<Text>();
             slot.itemIcon = transform.Find("DraggableItem/ItemIcon")?.GetComponent<Image>();
 
-            if (slot.stackText == null)
-            {
-                Debug.LogError($"StackText not found in DraggableItem for slot: {gameObject.name}");
-            }
-
-            if (slot.itemIcon == null)
-            {
-                Debug.LogError($"ItemIcon not found in DraggableItem for slot: {gameObject.name}");
-            }
-
             parentCanvas = GetComponentInParent<Canvas>();
             if (parentCanvas == null)
-            {
                 Debug.LogError("Parent canvas not found.");
-            }
+
+            // Cache the instantiated DescriptionPanel if it exists
+            _descPanel = FindObjectOfType<ItemDescriptionPanel>();
+
+            if (slot.stackText == null)
+                Debug.LogError($"StackText not found in DraggableItem for slot: {gameObject.name}");
+            if (slot.itemIcon == null)
+                Debug.LogError($"ItemIcon not found in DraggableItem for slot: {gameObject.name}");
         }
 
         public void OnPointerClick(PointerEventData eventData)
         {
             Debug.Log($"Slot clicked: {gameObject.name}, Button: {eventData.button}, Item: {(slot.item != null ? slot.item.itemName : "None")}");
+
+            // Close existing action UI
             if (currentItemActionUI != null)
             {
                 Destroy(currentItemActionUI);
                 currentItemActionUI = null;
             }
 
+            // Handle left-click and right-click actions
             if (eventData.button == PointerEventData.InputButton.Left)
             {
                 if (Time.time - lastClickTime < doubleClickThreshold)
-                {
                     HandleDoubleClick();
-                }
                 lastClickTime = Time.time;
             }
             else if (eventData.button == PointerEventData.InputButton.Right && slot.item != null)
@@ -60,27 +59,32 @@ namespace Nakshatra.InventorySystem
                 Debug.Log($"Right-clicked on item: {slot.item.itemName}");
                 ShowItemActionUI(slot.item);
             }
-            else
+
+            // Show or hide description panel based on clicked item
+            InventoryItem clickedItem = slot.item;
+            if (_descPanel == null)
+                _descPanel = FindObjectOfType<ItemDescriptionPanel>();
+
+            if (_descPanel != null)
             {
-                Debug.Log("Right-clicked on empty slot or left-clicked.");
+                if (clickedItem != null)
+                    _descPanel.Show(clickedItem);
+                else
+                    _descPanel.Hide();
             }
         }
 
         private void HandleDoubleClick()
         {
             if (slot != null && slot.item != null)
-            {
                 slot.UseItem();
-            }
         }
 
         private void Update()
         {
             if (currentItemActionUI != null && (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1)))
             {
-                Vector2 localMousePosition = parentCanvas.transform.InverseTransformPoint(Input.mousePosition);
                 RectTransform rectTransform = currentItemActionUI.GetComponent<RectTransform>();
-
                 if (!RectTransformUtility.RectangleContainsScreenPoint(rectTransform, Input.mousePosition, parentCanvas.worldCamera))
                 {
                     Destroy(currentItemActionUI);
@@ -98,18 +102,15 @@ namespace Nakshatra.InventorySystem
 
             currentItemActionUI = Instantiate(itemActionPrefab, parentCanvas.transform);
 
-            // Convert screen position to canvas position
-            Vector2 anchoredPosition;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(parentCanvas.transform as RectTransform, Input.mousePosition, parentCanvas.worldCamera, out anchoredPosition);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                parentCanvas.transform as RectTransform,
+                Input.mousePosition,
+                parentCanvas.worldCamera,
+                out Vector2 anchoredPosition);
 
-            currentItemActionUI.GetComponent<RectTransform>().anchoredPosition = anchoredPosition;
-
-            // Ensure the size of the ItemAction prefab is correct
             RectTransform rectTransform = currentItemActionUI.GetComponent<RectTransform>();
-            if (rectTransform != null)
-            {
-                rectTransform.sizeDelta = new Vector2(100, 100);
-            }
+            rectTransform.anchoredPosition = anchoredPosition;
+            rectTransform.sizeDelta = new Vector2(100, 100);
 
             ItemActionUI itemActionUI = currentItemActionUI.GetComponent<ItemActionUI>();
             if (itemActionUI != null)
@@ -130,7 +131,6 @@ namespace Nakshatra.InventorySystem
 
         private void OnEnable()
         {
-            // Ensure the UI gets updated when the canvas is enabled
             slot.SetItem(slot.item, slot.quantity);
         }
     }

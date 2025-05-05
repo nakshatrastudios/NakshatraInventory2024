@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,6 +12,7 @@ namespace Nakshatra.InventorySystem
         [Header("UI References")]
         [SerializeField] private Image iconImage;
         [SerializeField] private Text nameText;
+        [SerializeField] private Text itemTypeText;
         [SerializeField] private Text descriptionText;
         [Tooltip("Parent for dynamic stat lines (optional)")]
         [SerializeField] private Transform statsContainer;
@@ -40,6 +42,36 @@ namespace Nakshatra.InventorySystem
             // Name
             if (nameText != null)
                 nameText.text = item.itemName;
+
+            // Item type and categories
+            if (itemTypeText != null)
+            {
+                var descriptors = new List<string> { item.itemType.ToString() };
+
+                if (item.itemType == ItemType.Equipment)
+                {
+                    descriptors.Add(item.equipmentCategory.ToString());
+
+                    if (item.equipmentCategory == EquipmentCategory.Weapon)
+                    {
+                        descriptors.Add(item.weaponType.ToString());
+
+                        if (item.weaponType == WeaponType.OneHand)
+                        {
+                            if (item.isMainHand)
+                                descriptors.Add("Main Hand");
+                            if (item.isOffHand)
+                                descriptors.Add("Off Hand");
+                        }
+                        else if (item.weaponType == WeaponType.TwoHand)
+                        {
+                            descriptors.Add("Two-Handed");
+                        }
+                    }
+                }
+
+                itemTypeText.text = string.Join(", ", descriptors);
+            }
 
             // Description
             if (descriptionText != null)
