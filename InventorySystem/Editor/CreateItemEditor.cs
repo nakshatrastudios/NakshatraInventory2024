@@ -31,6 +31,9 @@ namespace Nakshatra.InventorySystem.Editor
         private List<Vector3> itemPositions = new List<Vector3>();
         private List<Vector3> itemRotations = new List<Vector3>();
         private List<Vector3> itemScale = new List<Vector3>();
+        private AudioClip pickupSound;
+        private AudioClip onEquipSound;
+        private AudioClip onUnequipSound;
 
         private bool toggleSiblings;
         private List<ParentToggleData> parentToggles = new List<ParentToggleData>();
@@ -192,6 +195,18 @@ namespace Nakshatra.InventorySystem.Editor
                     parentToggles.Add(new ParentToggleData());
             }
 
+            GUILayout.Space(10);
+            GUILayout.Label("Pickup Sound", EditorStyles.boldLabel);
+            pickupSound = SafeObjectField<AudioClip>(
+                "Pickup Sound Clip",
+                pickupSound,
+                false
+            );
+
+            GUILayout.Space(10);
+            GUILayout.Label("Equip / Unequip Sounds", EditorStyles.boldLabel);
+            onEquipSound   = SafeObjectField<AudioClip>("Equip/Use Sound", onEquipSound, false);
+            onUnequipSound = SafeObjectField<AudioClip>("Unequip Sound", onUnequipSound, false);
 
             if (GUILayout.Button("Create Item"))
                 CreateAndSetupItem();
@@ -248,6 +263,9 @@ namespace Nakshatra.InventorySystem.Editor
 
             newItem.toggleSiblings  = toggleSiblings;
             newItem.parentToggles    = parentToggles;
+            newItem.pickupSound   = pickupSound;
+            newItem.onEquipSound   = onEquipSound;
+            newItem.onUnequipSound = onUnequipSound;
 
             // Save the new InventoryItem asset
             string itemPath = $"{resourcesPath}/{itemName}.asset";

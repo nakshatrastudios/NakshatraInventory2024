@@ -59,6 +59,12 @@ namespace Nakshatra.InventorySystem
         {
             if (playerInRange && Input.GetKeyDown(KeyCode.E))
             {
+                // 1) Play pickup sound
+                if (item.pickupSound != null)
+                    AudioSource.PlayClipAtPoint(
+                        item.pickupSound,
+                        Camera.main.transform.position
+                    );
                 // Access the player's inventory (assumes player has an Inventory component)
                 Inventory playerInventory = GameObject.FindWithTag("Player").GetComponent<Inventory>();
                 if (playerInventory != null)

@@ -27,6 +27,7 @@ namespace Nakshatra.InventorySystem
         public ItemDB itemDB; // Reference to ItemDB
 
         public List<EquipmentSlot> equipmentSlots = new List<EquipmentSlot>(); // Add this line
+        private AudioSource audioSource;
 
         private void Awake()
         {
@@ -49,6 +50,9 @@ namespace Nakshatra.InventorySystem
             }
 
             InitializeEquipmentSlots();
+            audioSource = GetComponent<AudioSource>();
+            if (audioSource == null)
+                audioSource = gameObject.AddComponent<AudioSource>();
         }
 
         public void PopulateAllItemsList()
@@ -169,6 +173,9 @@ namespace Nakshatra.InventorySystem
                 }
             }
 
+            if (item.onEquipSound != null)
+                audioSource.PlayOneShot(item.onEquipSound);
+
         }
 
         private void InstantiateEquippedItem(InventoryItem item)
@@ -272,6 +279,9 @@ namespace Nakshatra.InventorySystem
                         }
                     }
                 }
+
+                if (item.onUnequipSound != null)
+                    audioSource.PlayOneShot(item.onUnequipSound);
 
             }
             else if (targetSlot != null)

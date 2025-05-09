@@ -44,6 +44,17 @@ namespace Nakshatra.InventorySystem
         public GameObject itemPickupPrefab;
         public GameObject pickupTextPrefab;
 
+        [Header("Sounds (Optional)")]
+        [Tooltip("Played when this item is picked up by the player")]
+        public AudioClip pickupSound;
+
+        [Header("Sounds (Optional)")]
+        [Tooltip("Played when this item is equipped (or used if consumable)")]
+        public AudioClip onEquipSound;
+
+        [Tooltip("Played when this item is unequipped")]
+        public AudioClip onUnequipSound;
+
         [Header("Sibling Toggles (Optional)")]
         public bool toggleSiblings;
         public List<ParentToggleData> parentToggles = new List<ParentToggleData>();

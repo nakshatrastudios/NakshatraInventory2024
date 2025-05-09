@@ -62,6 +62,16 @@ namespace Nakshatra.InventorySystem
         {
             Debug.Log($"Using {item.itemName}");
             ApplyItemEffects(item);
+
+            if (item.onEquipSound != null)
+            {
+                // You can choose PlayOneShot on the player AudioSource or a one‐shot
+                // at the main camera. Here’s a simple PlayClipAtPoint:
+                AudioSource.PlayClipAtPoint(
+                    item.onEquipSound,
+                    Camera.main.transform.position
+                );
+            }
             if (playerInventory != null)
             {
                 playerInventory.RemoveItemFromSlot(slot, 1); // Remove the used item from the specific slot

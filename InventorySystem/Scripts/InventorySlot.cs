@@ -122,6 +122,14 @@ namespace Nakshatra.InventorySystem
                 Debug.Log($"Used item: {item.itemName}");
                 if (item.itemType == ItemType.Consumable)
                 {
+                    // ▶ Play the consumable’s use/equip sound
+                    if (item.onEquipSound != null && Camera.main != null)
+                    {
+                        AudioSource.PlayClipAtPoint(
+                            item.onEquipSound,
+                            Camera.main.transform.position
+                        );
+                    }
                     PlayerStatus playerStatus = GameObject.FindWithTag("Player").GetComponent<PlayerStatus>();
                     if (playerStatus != null)
                     {

@@ -12,18 +12,41 @@ namespace Nakshatra.InventorySystem
             public GameObject canvas;
         }
 
+        [Header("Inventory Panel Toggles")]
+        [Tooltip("Key to open inventory panels")]  
+        public KeyCode openKey = KeyCode.I;
+        [Tooltip("Key to close inventory panels")]  
+        public KeyCode closeKey = KeyCode.Escape;
+
+        [Header("Time Control")]
+        [Tooltip("Freeze game time when inventory is opened")]
+        public bool freezeTimeOnOpen = false;
+
         public List<CanvasInfo> canvases = new List<CanvasInfo>();
+
+        private bool isOpen = false;
+        private float previousTimeScale = 1f;
+
+        void Start()
+        {
+            // Ensure cursor is unlocked on start, then hide inventory
+            UnlockCursor();
+            DisableCanvases();
+        }
 
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.B) || Input.GetKeyDown(KeyCode.I))
+            // Open inventories
+            if (!isOpen && Input.GetKeyDown(openKey))
             {
                 EnableCanvases();
+                isOpen = true;
             }
-
-            if (Input.GetKeyDown(KeyCode.Escape))
+            // Close inventories
+            else if (isOpen && Input.GetKeyDown(closeKey))
             {
                 DisableCanvases();
+                isOpen = false;
             }
         }
 
@@ -31,18 +54,31 @@ namespace Nakshatra.InventorySystem
         {
             foreach (var canvasInfo in canvases)
             {
-                canvasInfo.canvas.SetActive(true);
+                if (canvasInfo.canvas != null)
+                    canvasInfo.canvas.SetActive(true);
             }
             UnlockCursor();
+
+            if (freezeTimeOnOpen)
+            {
+                previousTimeScale = Time.timeScale;
+                Time.timeScale = 0f;
+            }
         }
 
         public void DisableCanvases()
         {
             foreach (var canvasInfo in canvases)
             {
-                canvasInfo.canvas.SetActive(false);
+                if (canvasInfo.canvas != null)
+                    canvasInfo.canvas.SetActive(false);
             }
             LockCursor();
+
+            if (freezeTimeOnOpen)
+            {
+                Time.timeScale = previousTimeScale;
+            }
         }
 
         private void UnlockCursor()
@@ -55,12 +91,6 @@ namespace Nakshatra.InventorySystem
         {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
-        }
-
-        void Start()
-        {
-            UnlockCursor();
-            DisableCanvases();
         }
     }
 }
