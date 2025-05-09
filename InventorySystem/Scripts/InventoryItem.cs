@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Nakshatra.InventorySystem;
+
 namespace Nakshatra.InventorySystem
 {
     [CreateAssetMenu(fileName = "New Inventory Item", menuName = "Inventory/Item")]
@@ -36,10 +38,29 @@ namespace Nakshatra.InventorySystem
         public List<GameObject> itemPrefabs = new List<GameObject>();
         public List<Vector3> itemPositions = new List<Vector3>();
         public List<Vector3> itemRotations = new List<Vector3>();
+        public List<Vector3> itemScale = new List<Vector3>();
 
         // Pickup specific
         public GameObject itemPickupPrefab;
         public GameObject pickupTextPrefab;
+
+        [Header("Sibling Toggles (Optional)")]
+        public bool toggleSiblings;
+        public List<ParentToggleData> parentToggles = new List<ParentToggleData>();
+
+    }
+
+    [System.Serializable]
+    public class ParentToggleData
+    {
+        [Tooltip("Name of the parent GameObject in the scene")]
+        public string parentName;
+
+        [Tooltip("Child names to ENABLE on Equip (all others will be disabled)")]
+        public List<string> enableOnEquip = new List<string>();
+
+        [Tooltip("Child names to ENABLE on Unequip (all others will be disabled)")]
+        public List<string> enableOnUnequip = new List<string>();
     }
 
     public enum ItemType

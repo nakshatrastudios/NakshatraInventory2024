@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
+using Nakshatra.InventorySystem;
 
 namespace Nakshatra.InventorySystem.Editor
 {
@@ -29,6 +30,11 @@ namespace Nakshatra.InventorySystem.Editor
         private List<string> selectedBoneNames = new List<string>();
         private List<Vector3> itemPositions = new List<Vector3>();
         private List<Vector3> itemRotations = new List<Vector3>();
+        private List<Vector3> itemScale = new List<Vector3>();
+
+        private bool toggleSiblings;
+        private List<ParentToggleData> parentToggles = new List<ParentToggleData>();
+
 
         // Helper to safely draw an ObjectField without crashing if the underlying
         // SerializedProperty got disposed.
@@ -44,13 +50,7 @@ namespace Nakshatra.InventorySystem.Editor
             }
         }
 
-        [MenuItem("Inventory System/Create Item")]
-        public static void ShowWindow()
-        {
-            var wnd = GetWindow<CreateItemEditor>(false, "Create Item", true);
-            wnd.minSize = new Vector2(300, 400);
-            wnd.Show();
-        }
+        
 
         public void OnGUI()
         {
@@ -143,11 +143,13 @@ namespace Nakshatra.InventorySystem.Editor
                     selectedBoneNames[i] = EditorGUILayout.TextField($"Bone Name {i + 1}", selectedBoneNames[i]);
                     itemPositions[i] = EditorGUILayout.Vector3Field($"Position {i + 1}", itemPositions[i]);
                     itemRotations[i] = EditorGUILayout.Vector3Field($"Rotation {i + 1}", itemRotations[i]);
+                    itemScale[i] = EditorGUILayout.Vector3Field($"Scale {i + 1}", itemScale[i]);
                     if (GUILayout.Button("Remove"))
                     {
                         selectedBoneNames.RemoveAt(i);
                         itemPositions.RemoveAt(i);
                         itemRotations.RemoveAt(i);
+                        itemScale.RemoveAt(i);
                     }
                     EditorGUILayout.EndHorizontal();
                 }
@@ -156,8 +158,40 @@ namespace Nakshatra.InventorySystem.Editor
                     selectedBoneNames.Add("");
                     itemPositions.Add(Vector3.zero);
                     itemRotations.Add(Vector3.zero);
+                    itemScale.Add(Vector3.one);
                 }
             }
+
+            toggleSiblings = EditorGUILayout.Toggle("Toggle Siblings", toggleSiblings);
+            if (toggleSiblings)
+            {
+                EditorGUILayout.LabelField("Parent Toggles", EditorStyles.boldLabel);
+                for (int i = 0; i < parentToggles.Count; i++)
+                {
+                    var d = parentToggles[i];
+                    EditorGUILayout.BeginVertical("box");
+                    d.parentName = EditorGUILayout.TextField("Parent Name", d.parentName);
+
+                    EditorGUILayout.LabelField("Enable On Equip");
+                    for(int j=0; j<d.enableOnEquip.Count; j++)
+                        d.enableOnEquip[j] = EditorGUILayout.TextField($"  [{j}]", d.enableOnEquip[j]);
+                    if (GUILayout.Button($"Add Enable-Equip Child to Parent #{i}"))
+                        d.enableOnEquip.Add("");
+
+                    EditorGUILayout.LabelField("Enable On Unequip");
+                    for(int j=0; j<d.enableOnUnequip.Count; j++)
+                        d.enableOnUnequip[j] = EditorGUILayout.TextField($"  [{j}]", d.enableOnUnequip[j]);
+                    if (GUILayout.Button($"Add Enable-Unequip Child to Parent #{i}"))
+                        d.enableOnUnequip.Add("");
+
+                    if (GUILayout.Button($"Remove Parent Toggle #{i}"))
+                        parentToggles.RemoveAt(i);
+                    EditorGUILayout.EndVertical();
+                }
+                if (GUILayout.Button("Add Parent Toggle"))
+                    parentToggles.Add(new ParentToggleData());
+            }
+
 
             if (GUILayout.Button("Create Item"))
                 CreateAndSetupItem();
@@ -206,10 +240,14 @@ namespace Nakshatra.InventorySystem.Editor
                 newItem.selectedBoneNames = new List<string>(selectedBoneNames);
                 newItem.itemPositions = new List<Vector3>(itemPositions);
                 newItem.itemRotations = new List<Vector3>(itemRotations);
+                newItem.itemScale = new List<Vector3>(itemScale);
             }
 
             if (itemType == ItemType.Currency)
                 newItem.currencyAmounts = new Dictionary<string, int>(currencyAmounts);
+
+            newItem.toggleSiblings  = toggleSiblings;
+            newItem.parentToggles    = parentToggles;
 
             // Save the new InventoryItem asset
             string itemPath = $"{resourcesPath}/{itemName}.asset";

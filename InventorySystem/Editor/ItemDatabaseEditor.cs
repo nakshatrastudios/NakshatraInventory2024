@@ -8,13 +8,6 @@ namespace Nakshatra.InventorySystem.Editor
         private ItemDB itemDB;
         private Vector2 itemScrollPos;
 
-        [MenuItem("Inventory System/Create Item Database")]
-        public static void ShowWindow()
-        {
-            var wnd = GetWindow<CreateItemEditor>(false, "Item DB", true);
-            wnd.minSize = new Vector2(300, 400);
-            wnd.Show();
-        }
 
         public void OnGUI()
         {

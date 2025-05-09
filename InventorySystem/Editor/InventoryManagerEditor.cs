@@ -36,7 +36,7 @@ namespace Nakshatra.InventorySystem.Editor
         // Prefab field for your pre-configured panel
         private GameObject descriptionPanelPrefab;
 
-        [MenuItem("Inventory System/Inventory Manager")]
+        [MenuItem("Nakshatra Inventory System/Inventory Manager")]
         public static void ShowWindow()
         {
             GetWindow<InventoryManagerEditor>("Inventory System");

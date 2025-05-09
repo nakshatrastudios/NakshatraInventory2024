@@ -28,14 +28,7 @@ namespace Nakshatra.InventorySystem.Editor
         private List<Currency> currencies = new List<Currency>();
         private Dictionary<string, int> currencyAmounts = new Dictionary<string, int>();
 
-        [MenuItem("Inventory System/Create Inventory")]
-        public static void ShowWindow()
-        {
-            // This will open (or focus) the window, and title it “Create Inventory”
-            var window = GetWindow<CreateInventoryEditor>(false, "Create Inventory", true);
-            window.Show();
-        }
-
+        
         public void OnGUI()
         {
             GUILayout.Label("Inventory Settings", EditorStyles.boldLabel);

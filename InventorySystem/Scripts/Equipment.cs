@@ -146,6 +146,29 @@ namespace Nakshatra.InventorySystem
             {
                 Debug.LogError($"No slot available for equipment category: {item.equipmentCategory}");
             }
+
+            // SIBLING‐TOGGLE ON EQUIP
+            if (item.toggleSiblings)
+            {
+                foreach (var pt in item.parentToggles)
+                {
+                    if (string.IsNullOrEmpty(pt.parentName)) continue;
+                    var parentGO = GameObject.Find(pt.parentName);
+                    if (parentGO == null) continue;
+
+                    // disable all children
+                    foreach (Transform child in parentGO.transform)
+                        child.gameObject.SetActive(false);
+
+                    // enable only those listed
+                    foreach (var name in pt.enableOnEquip)
+                    {
+                        var c = parentGO.transform.Find(name);
+                        if (c != null) c.gameObject.SetActive(true);
+                    }
+                }
+            }
+
         }
 
         private void InstantiateEquippedItem(InventoryItem item)
@@ -161,6 +184,7 @@ namespace Nakshatra.InventorySystem
                         GameObject itemInstance = Instantiate(item.itemPrefabs[i], bone);
                         itemInstance.transform.localPosition = item.itemPositions[i];
                         itemInstance.transform.localRotation = Quaternion.Euler(item.itemRotations[i]);
+                        itemInstance.transform.localScale = item.itemScale[i];
                         instantiatedItems.Add(itemInstance);
                     }
                     else
@@ -226,6 +250,34 @@ namespace Nakshatra.InventorySystem
                     }
                     equippedItemInstances.Remove(item);
                 }
+
+                // SIBLING‐TOGGLE ON UNEQUIP
+                if (item.toggleSiblings)
+                {
+                    foreach (var pt in item.parentToggles)
+                    {
+                        if (string.IsNullOrEmpty(pt.parentName)) continue;
+                        var parentGO = GameObject.Find(pt.parentName);
+                        if (parentGO == null) continue;
+
+                        // disable all children
+                        foreach (Transform child in parentGO.transform)
+                            child.gameObject.SetActive(false);
+
+                        // enable only those listed for unequip
+                        foreach (var name in pt.enableOnUnequip)
+                        {
+                            var c = parentGO.transform.Find(name);
+                            if (c != null) c.gameObject.SetActive(true);
+                        }
+                    }
+                }
+
+            }
+            else if (targetSlot != null)
+            {
+                Debug.LogError($"Item {item.itemName} is not equipped in the expected slot.");
+
             }
             else
             {

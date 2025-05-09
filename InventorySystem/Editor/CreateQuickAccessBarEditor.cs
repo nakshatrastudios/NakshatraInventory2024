@@ -18,13 +18,6 @@ namespace Nakshatra.InventorySystem.Editor
         private Vector2 quickAccessCellSize;
         private float quickAccessBackgroundPaddingPercentage = 17f;
 
-        [MenuItem("Inventory System/Create Quick Access Bar")]
-        public static void ShowWindow()
-        {
-            var wnd = GetWindow<CreateItemEditor>(false, "Create Quick Access Bar", true);
-            wnd.minSize = new Vector2(300, 400);
-            wnd.Show();
-        }
 
         public void OnGUI()
         {
